@@ -1,0 +1,5 @@
+modules = {
+    ['immut'] = 'immut.lua'
+}
+reporter = 'html'
+reportfile = 'luacov.report.html'
