@@ -34,27 +34,32 @@ local immut = {
 ---
 
 ---@class immut.map
+---@field package __impl table
 local __immut_map_mt = {}
 __immut_map_mt.__index = __immut_map_mt
-
-local __immut_map_empty = setmetatable({}, __immut_map_mt)
 
 ---@return immut.map
 ---@nodiscard
 function immut.map()
-    return __immut_map_empty
+    return setmetatable({ __impl = {} }, __immut_map_mt)
 end
 
 ---@return integer
 ---@nodiscard
 function __immut_map_mt:size()
-    error 'not implemented yet'
+    local size = 0
+
+    for _ in pairs(self.__impl) do
+        size = size + 1
+    end
+
+    return size
 end
 
 ---@return boolean
 ---@nodiscard
 function __immut_map_mt:empty()
-    error 'not implemented yet'
+    return next(self.__impl) == nil
 end
 
 ---@param key any
@@ -62,28 +67,51 @@ end
 ---@return immut.map
 ---@nodiscard
 function __immut_map_mt:insert(key, value)
-    error 'not implemented yet'
+    if key == nil then error 'key cannot be nil' end
+    if value == nil then error 'value cannot be nil' end
+
+    local new_map = immut.map()
+
+    for k, v in pairs(self.__impl) do
+        new_map.__impl[k] = v
+    end
+
+    new_map.__impl[key] = value
+    return new_map
 end
 
 ---@param key any
 ---@return immut.map
 ---@nodiscard
 function __immut_map_mt:remove(key)
-    error 'not implemented yet'
+    if key == nil then error 'key cannot be nil' end
+
+    local new_map = immut.map()
+
+    for k, v in pairs(self.__impl) do
+        new_map.__impl[k] = v
+    end
+
+    new_map.__impl[key] = nil
+    return new_map
 end
 
 ---@param key any
 ---@return any
 ---@nodiscard
 function __immut_map_mt:get(key)
-    error 'not implemented yet'
+    if key == nil then error 'key cannot be nil' end
+
+    return self.__impl[key]
 end
 
 ---@param key any
 ---@return boolean
 ---@nodiscard
 function __immut_map_mt:has(key)
-    error 'not implemented yet'
+    if key == nil then error 'key cannot be nil' end
+
+    return self.__impl[key] ~= nil
 end
 
 ---
@@ -93,48 +121,73 @@ end
 ---
 
 ---@class immut.set
+---@field package __impl table
 local __immut_set_mt = {}
 __immut_set_mt.__index = __immut_set_mt
-
-local __immut_set_empty = setmetatable({}, __immut_set_mt)
 
 ---@return immut.set
 ---@nodiscard
 function immut.set()
-    return __immut_set_empty
+    return setmetatable({ __impl = {} }, __immut_set_mt)
 end
 
 ---@return integer
 ---@nodiscard
 function __immut_set_mt:size()
-    error 'not implemented yet'
+    local size = 0
+
+    for _ in pairs(self.__impl) do
+        size = size + 1
+    end
+
+    return size
 end
 
 ---@return boolean
 ---@nodiscard
 function __immut_set_mt:empty()
-    error 'not implemented yet'
+    return next(self.__impl) == nil
 end
 
 ---@param key any
 ---@return immut.set
 ---@nodiscard
 function __immut_set_mt:insert(key)
-    error 'not implemented yet'
+    if key == nil then error 'key cannot be nil' end
+
+    local new_set = immut.set()
+
+    for k in pairs(self.__impl) do
+        new_set.__impl[k] = true
+    end
+
+    new_set.__impl[key] = true
+    return new_set
 end
 
 ---@param key any
 ---@return immut.set
 ---@nodiscard
 function __immut_set_mt:remove(key)
-    error 'not implemented yet'
+    if key == nil then error 'key cannot be nil' end
+
+    local new_set = immut.set()
+
+    for k in pairs(self.__impl) do
+        new_set.__impl[k] = true
+    end
+
+    new_set.__impl[key] = nil
+    return new_set
 end
 
 ---@param key any
 ---@return boolean
 ---@nodiscard
 function __immut_set_mt:has(key)
-    error 'not implemented yet'
+    if key == nil then error 'key cannot be nil' end
+
+    return self.__impl[key] ~= nil
 end
 
 ---
