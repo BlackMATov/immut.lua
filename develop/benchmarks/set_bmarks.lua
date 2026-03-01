@@ -6,6 +6,6 @@ local N = 1000
 print '----------------------------------------'
 
 basics.describe_bench(
-    string.format('Dict Benchmarks: %d', N),
+    string.format('Set Benchmarks: %d', N),
     function()
     end)

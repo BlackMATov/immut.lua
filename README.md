@@ -23,6 +23,8 @@
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Cheat Sheet](#cheat-sheet)
+  - [Map](#map)
+  - [Set](#set)
 - [Changelog](#changelog)
 - [License](#license)
 
@@ -46,7 +48,34 @@ luarocks install immut.lua
 
 ## Cheat Sheet
 
-> Comming soon...
+### Map
+
+```
+map :: map_mt
+
+map_mt:size -> integer
+map_mt:empty -> boolean
+
+map_mt:insert :: any, any -> map_mt
+map_mt:remove :: any -> map_mt
+
+map_mt:get :: any -> any
+map_mt:has :: any -> boolean
+```
+
+### Set
+
+```
+set :: set_mt
+
+set_mt:size -> integer
+set_mt:empty -> boolean
+
+set_mt:insert :: any -> set_mt
+set_mt:remove :: any -> set_mt
+
+set_mt:has :: any -> boolean
+```
 
 ## Changelog
 

@@ -6,6 +6,6 @@ local N = 1000
 print '----------------------------------------'
 
 basics.describe_bench(
-    string.format('List Benchmarks: %d', N),
+    string.format('Map Benchmarks: %d', N),
     function()
     end)

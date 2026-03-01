@@ -27,4 +27,120 @@ local immut = {
     ]]
 }
 
+---
+---
+--- Map
+---
+---
+
+---@class immut.map
+local __immut_map_mt = {}
+__immut_map_mt.__index = __immut_map_mt
+
+local __immut_map_empty = setmetatable({}, __immut_map_mt)
+
+---@return immut.map
+---@nodiscard
+function immut.map()
+    return __immut_map_empty
+end
+
+---@return integer
+---@nodiscard
+function __immut_map_mt:size()
+    error 'not implemented yet'
+end
+
+---@return boolean
+---@nodiscard
+function __immut_map_mt:empty()
+    error 'not implemented yet'
+end
+
+---@param key any
+---@param value any
+---@return immut.map
+---@nodiscard
+function __immut_map_mt:insert(key, value)
+    error 'not implemented yet'
+end
+
+---@param key any
+---@return immut.map
+---@nodiscard
+function __immut_map_mt:remove(key)
+    error 'not implemented yet'
+end
+
+---@param key any
+---@return any
+---@nodiscard
+function __immut_map_mt:get(key)
+    error 'not implemented yet'
+end
+
+---@param key any
+---@return boolean
+---@nodiscard
+function __immut_map_mt:has(key)
+    error 'not implemented yet'
+end
+
+---
+---
+--- Set
+---
+---
+
+---@class immut.set
+local __immut_set_mt = {}
+__immut_set_mt.__index = __immut_set_mt
+
+local __immut_set_empty = setmetatable({}, __immut_set_mt)
+
+---@return immut.set
+---@nodiscard
+function immut.set()
+    return __immut_set_empty
+end
+
+---@return integer
+---@nodiscard
+function __immut_set_mt:size()
+    error 'not implemented yet'
+end
+
+---@return boolean
+---@nodiscard
+function __immut_set_mt:empty()
+    error 'not implemented yet'
+end
+
+---@param key any
+---@return immut.set
+---@nodiscard
+function __immut_set_mt:insert(key)
+    error 'not implemented yet'
+end
+
+---@param key any
+---@return immut.set
+---@nodiscard
+function __immut_set_mt:remove(key)
+    error 'not implemented yet'
+end
+
+---@param key any
+---@return boolean
+---@nodiscard
+function __immut_set_mt:has(key)
+    error 'not implemented yet'
+end
+
+---
+---
+---
+---
+---
+
 return immut
