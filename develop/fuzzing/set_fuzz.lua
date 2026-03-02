@@ -1,7 +1,5 @@
 local immut = require 'immut'
 
-local N = 10
-
 local INSERT_COUNT = math.random(5, 15)
 local REMOVE_COUNT = math.random(10, 20)
 
@@ -32,100 +30,102 @@ local function update_possible_keys()
     end
 end
 
-for _ = 1, N do
-    update_possible_keys()
+for _, mode in ipairs({ 'copy' }) do
+    do
+        update_possible_keys()
 
-    local curr_set = immut.set()
+        local curr_set = immut.set(mode)
 
-    local expected_keys = {} ---@type table<any, boolean>
-    local expected_size = 0 ---@type integer
+        local expected_keys = {} ---@type table<any, boolean>
+        local expected_size = 0 ---@type integer
 
-    for _ = 1, INSERT_COUNT do
-        local new_key = get_random_key()
+        for _ = 1, INSERT_COUNT do
+            local new_key = get_random_key()
 
-        local next_set = curr_set:insert(new_key)
+            local next_set = curr_set:insert(new_key)
 
-        for _, key in ipairs(POSSIBLE_KEYS) do
-            if expected_keys[key] then
-                assert(curr_set:has(key) == true)
-            else
-                assert(curr_set:has(key) == false)
+            for _, key in ipairs(POSSIBLE_KEYS) do
+                if expected_keys[key] then
+                    assert(curr_set:has(key) == true)
+                else
+                    assert(curr_set:has(key) == false)
+                end
             end
-        end
 
-        if expected_keys[new_key] ~= nil then
-            assert(curr_set == next_set)
-        else
-            assert(curr_set ~= next_set)
+            if expected_keys[new_key] ~= nil then
+                assert(curr_set == next_set)
+            else
+                assert(curr_set ~= next_set)
+                expected_keys[new_key] = true
+                expected_size = expected_size + 1
+            end
+
+            assert(next_set:size() == expected_size)
+
+            for _, key in ipairs(POSSIBLE_KEYS) do
+                if expected_keys[key] ~= nil then
+                    assert(next_set:has(key) == true)
+                else
+                    assert(next_set:has(key) == false)
+                end
+            end
+
+            curr_set = next_set
+        end
+    end
+
+    do
+        local curr_set = immut.set(mode)
+
+        local expected_keys = {} ---@type table<any, boolean>
+        local expected_size = 0 ---@type integer
+
+        for _ = 1, INSERT_COUNT do
+            local new_key = get_random_key()
+
+            curr_set = curr_set:insert(new_key)
+
+            if expected_keys[new_key] == nil then
+                expected_size = expected_size + 1
+            end
+
             expected_keys[new_key] = true
-            expected_size = expected_size + 1
         end
 
-        assert(next_set:size() == expected_size)
+        for _ = 1, REMOVE_COUNT do
+            local rem_key = get_random_key()
 
-        for _, key in ipairs(POSSIBLE_KEYS) do
-            if expected_keys[key] ~= nil then
-                assert(next_set:has(key) == true)
-            else
-                assert(next_set:has(key) == false)
+            local next_set = curr_set:remove(rem_key)
+
+            for _, key in ipairs(POSSIBLE_KEYS) do
+                if expected_keys[key] ~= nil then
+                    assert(curr_set:has(key) == true)
+                else
+                    assert(curr_set:has(key) == false)
+                end
             end
-        end
 
-        curr_set = next_set
-    end
-end
+            if expected_keys[rem_key] ~= nil then
+                assert(curr_set ~= next_set)
 
-for _ = 1, N do
-    local curr_set = immut.set()
-
-    local expected_keys = {} ---@type table<any, boolean>
-    local expected_size = 0 ---@type integer
-
-    for _ = 1, INSERT_COUNT do
-        local new_key = get_random_key()
-
-        curr_set = curr_set:insert(new_key)
-
-        if expected_keys[new_key] == nil then
-            expected_size = expected_size + 1
-        end
-
-        expected_keys[new_key] = true
-    end
-
-    for _ = 1, REMOVE_COUNT do
-        local rem_key = get_random_key()
-
-        local next_set = curr_set:remove(rem_key)
-
-        for _, key in ipairs(POSSIBLE_KEYS) do
-            if expected_keys[key] ~= nil then
-                assert(curr_set:has(key) == true)
+                expected_keys[rem_key] = nil
+                expected_size = expected_size - 1
             else
-                assert(curr_set:has(key) == false)
+                assert(curr_set == next_set)
             end
-        end
 
-        if expected_keys[rem_key] ~= nil then
-            assert(curr_set ~= next_set)
+            assert(next_set:size() == expected_size)
+            assert(next_set:empty() == (expected_size == 0))
 
-            expected_keys[rem_key] = nil
-            expected_size = expected_size - 1
-        else
-            assert(curr_set == next_set)
-        end
-
-        assert(next_set:size() == expected_size)
-        assert(next_set:empty() == (expected_size == 0))
-
-        for _, key in ipairs(POSSIBLE_KEYS) do
-            if expected_keys[key] ~= nil then
-                assert(next_set:has(key) == true)
-            else
-                assert(next_set:has(key) == false)
+            for _, key in ipairs(POSSIBLE_KEYS) do
+                if expected_keys[key] ~= nil then
+                    assert(next_set:has(key) == true)
+                else
+                    assert(next_set:has(key) == false)
+                end
             end
-        end
 
-        curr_set = next_set
+            curr_set = next_set
+        end
     end
 end

@@ -44,14 +44,16 @@ luarocks install immut.lua
 
 ## Quick Start
 
-> Comming soon...
+> Coming soon...
 
 ## Cheat Sheet
 
 ### Map
 
 ```
-map :: map_mt
+map_mode :: 'copy' | 'hamt' | 'tree'
+
+map :: map_mode -> map_mt
 
 map_mt:size -> integer
 map_mt:empty -> boolean
@@ -66,7 +68,9 @@ map_mt:has :: any -> boolean
 ### Set
 
 ```
-set :: set_mt
+set_mode :: 'copy' | 'hamt' | 'tree'
+
+set :: set_mode -> set_mt
 
 set_mt:size -> integer
 set_mt:empty -> boolean
@@ -79,7 +83,7 @@ set_mt:has :: any -> boolean
 
 ## Changelog
 
-> Comming soon...
+> Coming soon...
 
 ## License
 
