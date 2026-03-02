@@ -70,6 +70,10 @@ function __immut_map_mt:insert(key, value)
     if key == nil then error 'key cannot be nil' end
     if value == nil then error 'value cannot be nil' end
 
+    if self.__impl[key] == value then
+        return self
+    end
+
     local new_map = immut.map()
 
     for k, v in pairs(self.__impl) do
@@ -85,6 +89,10 @@ end
 ---@nodiscard
 function __immut_map_mt:remove(key)
     if key == nil then error 'key cannot be nil' end
+
+    if self.__impl[key] == nil then
+        return self
+    end
 
     local new_map = immut.map()
 
@@ -155,6 +163,10 @@ end
 function __immut_set_mt:insert(key)
     if key == nil then error 'key cannot be nil' end
 
+    if self.__impl[key] then
+        return self
+    end
+
     local new_set = immut.set()
 
     for k in pairs(self.__impl) do
@@ -170,6 +182,10 @@ end
 ---@nodiscard
 function __immut_set_mt:remove(key)
     if key == nil then error 'key cannot be nil' end
+
+    if self.__impl[key] == nil then
+        return self
+    end
 
     local new_set = immut.set()
 
