@@ -57,8 +57,8 @@ dict :: dict_mode -> dict_mt
 dict_mt:size -> integer
 dict_mt:empty -> boolean
 
-dict_mt:insert :: any, any -> dict_mt
-dict_mt:remove :: any -> dict_mt
+dict_mt:assoc :: any, any -> dict_mt
+dict_mt:dissoc :: any -> dict_mt
 
 dict_mt:lookup :: any -> any
 dict_mt:contains :: any -> boolean

@@ -51,26 +51,29 @@ function __dict_mt:empty()
     error 'not implemented yet'
 end
 
----Inserts a key-value pair into the dict, returning a new dict instance with the updated data.
+---Associates a given key with a value in the dict, returning a new dict instance with the updated key-value pair.
+---If the key already exists, its value is replaced with the new value.
 ---@param key any
 ---@param value any
 ---@return immut.dict
 ---@nodiscard
 ---@diagnostic disable-next-line: unused-local
-function __dict_mt:insert(key, value)
+function __dict_mt:assoc(key, value)
     error 'not implemented yet'
 end
 
----Removes a key (and its associated value) from the dict, returning a new dict instance without the specified key.
+---Dissociates a given key from the dict, returning a new dict instance without the specified key.
+---If the key does not exist, the original dict is returned unchanged.
 ---@param key any
 ---@return immut.dict
 ---@nodiscard
 ---@diagnostic disable-next-line: unused-local
-function __dict_mt:remove(key)
+function __dict_mt:dissoc(key)
     error 'not implemented yet'
 end
 
----Retrieves the value associated with a given key in the dict. If the key does not exist, it returns `nil`.
+---Retrieves the value associated with a given key in the dict.
+---If the key does not exist, it returns `nil`.
 ---@param key any
 ---@return any
 ---@nodiscard
@@ -126,7 +129,7 @@ end
 ---@param value any
 ---@return immut.dict_copy
 ---@nodiscard
-function __dict_copy_mt:insert(key, value)
+function __dict_copy_mt:assoc(key, value)
     if self[key] == value then
         return self
     end
@@ -144,7 +147,7 @@ end
 ---@param key any
 ---@return immut.dict_copy
 ---@nodiscard
-function __dict_copy_mt:remove(key)
+function __dict_copy_mt:dissoc(key)
     if self[key] == nil then
         return self
     end

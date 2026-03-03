@@ -1,7 +1,7 @@
 local immut = require 'immut'
 
-local INSERT_COUNT = math.random(5, 15)
-local REMOVE_COUNT = math.random(10, 20)
+local ASSOC_COUNT = math.random(5, 15)
+local DISSOC_COUNT = math.random(10, 20)
 
 ---@type any[]
 local POSSIBLE_KEYS_OR_VALUES = {}
@@ -39,11 +39,11 @@ for _, mode in ipairs({ 'copy' }) do
         local expected_key_values = {} ---@type table<any, any>
         local expected_size = 0 ---@type integer
 
-        for _ = 1, INSERT_COUNT do
+        for _ = 1, ASSOC_COUNT do
             local new_key = random_key_or_value()
             local new_value = random_key_or_value()
 
-            local next_dict = curr_dict:insert(new_key, new_value)
+            local next_dict = curr_dict:assoc(new_key, new_value)
 
             for _, key in ipairs(POSSIBLE_KEYS_OR_VALUES) do
                 if expected_key_values[key] ~= nil then
@@ -90,11 +90,11 @@ for _, mode in ipairs({ 'copy' }) do
         local expected_key_values = {} ---@type table<any, any>
         local expected_size = 0 ---@type integer
 
-        for _ = 1, INSERT_COUNT do
+        for _ = 1, ASSOC_COUNT do
             local new_key = random_key_or_value()
             local new_value = random_key_or_value()
 
-            curr_dict = curr_dict:insert(new_key, new_value)
+            curr_dict = curr_dict:assoc(new_key, new_value)
 
             if expected_key_values[new_key] == nil then
                 expected_size = expected_size + 1
@@ -103,10 +103,10 @@ for _, mode in ipairs({ 'copy' }) do
             expected_key_values[new_key] = new_value
         end
 
-        for _ = 1, REMOVE_COUNT do
+        for _ = 1, DISSOC_COUNT do
             local rem_key = random_key_or_value()
 
-            local next_dict = curr_dict:remove(rem_key)
+            local next_dict = curr_dict:dissoc(rem_key)
 
             for _, key in ipairs(POSSIBLE_KEYS_OR_VALUES) do
                 if expected_key_values[key] ~= nil then
