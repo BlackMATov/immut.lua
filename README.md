@@ -23,8 +23,7 @@
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Cheat Sheet](#cheat-sheet)
-  - [Map](#map)
-  - [Set](#set)
+  - [Dict](#dict)
 - [Changelog](#changelog)
 - [License](#license)
 
@@ -48,37 +47,21 @@ luarocks install immut.lua
 
 ## Cheat Sheet
 
-### Map
+### Dict
 
 ```
-map_mode :: 'copy' | 'hamt' | 'tree'
+dict_mode :: 'copy' | 'hamt' | 'tree'
 
-map :: map_mode -> map_mt
+dict :: dict_mode -> dict_mt
 
-map_mt:size -> integer
-map_mt:empty -> boolean
+dict_mt:size -> integer
+dict_mt:empty -> boolean
 
-map_mt:insert :: any, any -> map_mt
-map_mt:remove :: any -> map_mt
+dict_mt:insert :: any, any -> dict_mt
+dict_mt:remove :: any -> dict_mt
 
-map_mt:get :: any -> any
-map_mt:has :: any -> boolean
-```
-
-### Set
-
-```
-set_mode :: 'copy' | 'hamt' | 'tree'
-
-set :: set_mode -> set_mt
-
-set_mt:size -> integer
-set_mt:empty -> boolean
-
-set_mt:insert :: any -> set_mt
-set_mt:remove :: any -> set_mt
-
-set_mt:has :: any -> boolean
+dict_mt:get :: any -> any
+dict_mt:has :: any -> boolean
 ```
 
 ## Changelog

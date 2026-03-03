@@ -29,84 +29,84 @@ local immut = {
 
 ---
 ---
---- MAP
+--- DICT
 ---
 ---
 
----@class immut.map
-local __map_mt = {}
-__map_mt.__index = __map_mt
+---@class immut.dict
+local __dict_mt = {}
+__dict_mt.__index = __dict_mt
 
----Returns the number of key-value pairs in the map.
+---Returns the number of key-value pairs in the dict.
 ---@return integer
 ---@nodiscard
-function __map_mt:size()
+function __dict_mt:size()
     error 'not implemented yet'
 end
 
----Returns `true` if the map contains no key-value pairs, `false` otherwise.
+---Returns `true` if the dict contains no key-value pairs, `false` otherwise.
 ---@return boolean
 ---@nodiscard
-function __map_mt:empty()
+function __dict_mt:empty()
     error 'not implemented yet'
 end
 
----Inserts a key-value pair into the map, returning a new map instance with the updated data.
+---Inserts a key-value pair into the dict, returning a new dict instance with the updated data.
 ---@param key any
 ---@param value any
----@return immut.map
+---@return immut.dict
 ---@nodiscard
 ---@diagnostic disable-next-line: unused-local
-function __map_mt:insert(key, value)
+function __dict_mt:insert(key, value)
     error 'not implemented yet'
 end
 
----Removes a key (and its associated value) from the map, returning a new map instance without the specified key.
+---Removes a key (and its associated value) from the dict, returning a new dict instance without the specified key.
 ---@param key any
----@return immut.map
+---@return immut.dict
 ---@nodiscard
 ---@diagnostic disable-next-line: unused-local
-function __map_mt:remove(key)
+function __dict_mt:remove(key)
     error 'not implemented yet'
 end
 
----Retrieves the value associated with a given key in the map. If the key does not exist, it returns `nil`.
+---Retrieves the value associated with a given key in the dict. If the key does not exist, it returns `nil`.
 ---@param key any
 ---@return any
 ---@nodiscard
 ---@diagnostic disable-next-line: unused-local
-function __map_mt:get(key)
+function __dict_mt:get(key)
     error 'not implemented yet'
 end
 
----Checks if a given key exists in the map, returning `true` if it does and `false` otherwise.
+---Checks if a given key exists in the dict, returning `true` if it does and `false` otherwise.
 ---@param key any
 ---@return boolean
 ---@nodiscard
 ---@diagnostic disable-next-line: unused-local
-function __map_mt:has(key)
+function __dict_mt:has(key)
     error 'not implemented yet'
 end
 
 ---
 ---
---- MAP COPY
+--- DICT COPY
 ---
 ---
 
----@class immut.map_copy : immut.map
-local __map_copy_mt = setmetatable({}, __map_mt)
-__map_copy_mt.__index = __map_copy_mt
+---@class immut.dict_copy : immut.dict
+local __dict_copy_mt = setmetatable({}, __dict_mt)
+__dict_copy_mt.__index = __dict_copy_mt
 
----@return immut.map_copy
+---@return immut.dict_copy
 ---@nodiscard
-local function __map_copy()
-    return setmetatable({}, __map_copy_mt)
+local function __dict_copy()
+    return setmetatable({}, __dict_copy_mt)
 end
 
 ---@return integer
 ---@nodiscard
-function __map_copy_mt:size()
+function __dict_copy_mt:size()
     local size = 0
 
     for _ in pairs(self) do
@@ -118,298 +118,114 @@ end
 
 ---@return boolean
 ---@nodiscard
-function __map_copy_mt:empty()
+function __dict_copy_mt:empty()
     return next(self) == nil
 end
 
 ---@param key any
 ---@param value any
----@return immut.map_copy
+---@return immut.dict_copy
 ---@nodiscard
-function __map_copy_mt:insert(key, value)
+function __dict_copy_mt:insert(key, value)
     if self[key] == value then
         return self
     end
 
-    local new_map = __map_copy()
+    local new_dict = __dict_copy()
 
     for k, v in pairs(self) do
-        new_map[k] = v
+        new_dict[k] = v
     end
 
-    new_map[key] = value
-    return new_map
+    new_dict[key] = value
+    return new_dict
 end
 
 ---@param key any
----@return immut.map_copy
+---@return immut.dict_copy
 ---@nodiscard
-function __map_copy_mt:remove(key)
+function __dict_copy_mt:remove(key)
     if self[key] == nil then
         return self
     end
 
-    local new_map = __map_copy()
+    local new_dict = __dict_copy()
 
     for k, v in pairs(self) do
-        new_map[k] = v
+        new_dict[k] = v
     end
 
-    new_map[key] = nil
-    return new_map
+    new_dict[key] = nil
+    return new_dict
 end
 
 ---@param key any
 ---@return any
 ---@nodiscard
-function __map_copy_mt:get(key)
+function __dict_copy_mt:get(key)
     return self[key]
 end
 
 ---@param key any
 ---@return boolean
 ---@nodiscard
-function __map_copy_mt:has(key)
+function __dict_copy_mt:has(key)
     return self[key] ~= nil
 end
 
 ---
 ---
---- MAP HAMT
+--- DICT HAMT
 ---
 ---
 
----@class immut.map_hamt : immut.map
-local __map_hamt_mt = setmetatable({}, __map_mt)
-__map_hamt_mt.__index = __map_hamt_mt
+---@class immut.dict_hamt : immut.dict
+local __dict_hamt_mt = setmetatable({}, __dict_mt)
+__dict_hamt_mt.__index = __dict_hamt_mt
 
----@return immut.map_hamt
+---@return immut.dict_hamt
 ---@nodiscard
-local function __map_hamt()
-    return setmetatable({}, __map_hamt_mt)
+local function __dict_hamt()
+    return setmetatable({}, __dict_hamt_mt)
 end
 
 ---
 ---
---- MAP TREE
+--- DICT TREE
 ---
 ---
 
----@class immut.map_tree : immut.map
-local __map_tree_mt = setmetatable({}, __map_mt)
-__map_tree_mt.__index = __map_tree_mt
+---@class immut.dict_tree : immut.dict
+local __dict_tree_mt = setmetatable({}, __dict_mt)
+__dict_tree_mt.__index = __dict_tree_mt
 
----@return immut.map_tree
+---@return immut.dict_tree
 ---@nodiscard
-local function __map_tree()
-    return setmetatable({}, __map_tree_mt)
+local function __dict_tree()
+    return setmetatable({}, __dict_tree_mt)
 end
 
 ---
 ---
---- MAP CTOR
+--- DICT CTOR
 ---
 ---
 
----@alias immut.map_mode 'copy' | 'hamt' | 'tree'
+---@alias immut.dict_mode 'copy' | 'hamt' | 'tree'
 
----@type table<immut.map_mode, fun(): immut.map>
-local __MAP_CTORS = {
-    copy = __map_copy,
-    hamt = __map_hamt,
-    tree = __map_tree,
+---@type table<immut.dict_mode, fun(): immut.dict>
+local __DICT_CTORS = {
+    copy = __dict_copy,
+    hamt = __dict_hamt,
+    tree = __dict_tree,
 }
 
----@param mode immut.map_mode
----@return immut.map
+---@param mode immut.dict_mode
+---@return immut.dict
 ---@nodiscard
-function immut.map(mode)
-    return (__MAP_CTORS[mode] or function()
-        error(string.format('invalid map mode: %s', tostring(mode)))
-    end)()
-end
-
----
----
---- SET
----
----
-
----@class immut.set
-local __set_mt = {}
-__set_mt.__index = __set_mt
-
----Returns the number of keys in the set.
----@return integer
----@nodiscard
-function __set_mt:size()
-    error 'not implemented yet'
-end
-
----Returns `true` if the set contains no keys, `false` otherwise.
----@return boolean
----@nodiscard
-function __set_mt:empty()
-    error 'not implemented yet'
-end
-
----Inserts a key into the set, returning a new set instance with the updated data.
----@param key any
----@return immut.set
----@nodiscard
----@diagnostic disable-next-line: unused-local
-function __set_mt:insert(key)
-    error 'not implemented yet'
-end
-
----Removes a key from the set, returning a new set instance without the specified key.
----@param key any
----@return immut.set
----@nodiscard
----@diagnostic disable-next-line: unused-local
-function __set_mt:remove(key)
-    error 'not implemented yet'
-end
-
----Checks if a given key exists in the set, returning `true` if it does and `false` otherwise.
----@param key any
----@return boolean
----@nodiscard
----@diagnostic disable-next-line: unused-local
-function __set_mt:has(key)
-    error 'not implemented yet'
-end
-
----
----
---- SET COPY
----
----
-
----@class immut.set_copy : immut.set
-local __set_copy_mt = setmetatable({}, __set_mt)
-__set_copy_mt.__index = __set_copy_mt
-
----@return immut.set_copy
----@nodiscard
-local function __set_copy()
-    return setmetatable({}, __set_copy_mt)
-end
-
----@return integer
----@nodiscard
-function __set_copy_mt:size()
-    local size = 0
-
-    for _ in pairs(self) do
-        size = size + 1
-    end
-
-    return size
-end
-
----@return boolean
----@nodiscard
-function __set_copy_mt:empty()
-    return next(self) == nil
-end
-
----@param key any
----@return immut.set_copy
----@nodiscard
-function __set_copy_mt:insert(key)
-    if self[key] then
-        return self
-    end
-
-    local new_set = __set_copy()
-
-    for v in pairs(self) do
-        new_set[v] = true
-    end
-
-    new_set[key] = true
-    return new_set
-end
-
----@param key any
----@return immut.set_copy
----@nodiscard
-function __set_copy_mt:remove(key)
-    if self[key] == nil then
-        return self
-    end
-
-    local new_set = __set_copy()
-
-    for v in pairs(self) do
-        new_set[v] = true
-    end
-
-    new_set[key] = nil
-    return new_set
-end
-
----@param key any
----@return boolean
----@nodiscard
-function __set_copy_mt:has(key)
-    return self[key] ~= nil
-end
-
----
----
---- SET HAMT
----
----
-
----@class immut.set_hamt : immut.set
-local __set_hamt_mt = setmetatable({}, __set_mt)
-__set_hamt_mt.__index = __set_hamt_mt
-
----@return immut.set_hamt
----@nodiscard
-local function __set_hamt()
-    return setmetatable({}, __set_hamt_mt)
-end
-
----
----
---- SET TREE
----
----
-
----@class immut.set_tree : immut.set
-local __set_tree_mt = setmetatable({}, __set_mt)
-__set_tree_mt.__index = __set_tree_mt
-
----@return immut.set_tree
----@nodiscard
-local function __set_tree()
-    return setmetatable({}, __set_tree_mt)
-end
-
----
----
---- SET CTOR
----
----
-
----@alias immut.set_mode 'copy' | 'hamt' | 'tree'
-
----@type table<immut.set_mode, fun(): immut.set>
-local __SET_CTORS = {
-    copy = __set_copy,
-    hamt = __set_hamt,
-    tree = __set_tree,
-}
-
----@param mode immut.set_mode
----@return immut.set
----@nodiscard
-function immut.set(mode)
-    return (__SET_CTORS[mode] or function()
-        error(string.format('invalid set mode: %s', tostring(mode)))
+function immut.dict(mode)
+    return (__DICT_CTORS[mode] or function()
+        error(string.format('invalid dict mode: %s', tostring(mode)))
     end)()
 end
 

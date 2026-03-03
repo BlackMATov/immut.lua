@@ -34,7 +34,7 @@ for _, mode in ipairs({ 'copy' }) do
     do
         update_possible_keys_or_values()
 
-        local curr_map = immut.map(mode)
+        local curr_dict = immut.dict(mode)
 
         local expected_key_values = {} ---@type table<any, any>
         local expected_size = 0 ---@type integer
@@ -43,49 +43,49 @@ for _, mode in ipairs({ 'copy' }) do
             local new_key = get_random_key_or_value()
             local new_value = get_random_key_or_value()
 
-            local next_map = curr_map:insert(new_key, new_value)
+            local next_dict = curr_dict:insert(new_key, new_value)
 
             for _, key in ipairs(POSSIBLE_KEYS_OR_VALUES) do
                 if expected_key_values[key] ~= nil then
-                    assert(curr_map:has(key) == true)
-                    assert(curr_map:get(key) == expected_key_values[key])
+                    assert(curr_dict:has(key) == true)
+                    assert(curr_dict:get(key) == expected_key_values[key])
                 else
-                    assert(curr_map:has(key) == false)
-                    assert(curr_map:get(key) == nil)
+                    assert(curr_dict:has(key) == false)
+                    assert(curr_dict:get(key) == nil)
                 end
             end
 
             if expected_key_values[new_key] ~= nil then
                 if expected_key_values[new_key] == new_value then
-                    assert(curr_map == next_map)
+                    assert(curr_dict == next_dict)
                 else
-                    assert(curr_map ~= next_map)
+                    assert(curr_dict ~= next_dict)
                     expected_key_values[new_key] = new_value
                 end
             else
-                assert(curr_map ~= next_map)
+                assert(curr_dict ~= next_dict)
                 expected_key_values[new_key] = new_value
                 expected_size = expected_size + 1
             end
 
-            assert(next_map:size() == expected_size)
+            assert(next_dict:size() == expected_size)
 
             for _, key in ipairs(POSSIBLE_KEYS_OR_VALUES) do
                 if expected_key_values[key] ~= nil then
-                    assert(next_map:has(key) == true)
-                    assert(next_map:get(key) == expected_key_values[key])
+                    assert(next_dict:has(key) == true)
+                    assert(next_dict:get(key) == expected_key_values[key])
                 else
-                    assert(next_map:has(key) == false)
-                    assert(next_map:get(key) == nil)
+                    assert(next_dict:has(key) == false)
+                    assert(next_dict:get(key) == nil)
                 end
             end
 
-            curr_map = next_map
+            curr_dict = next_dict
         end
     end
 
     do
-        local curr_map = immut.map(mode)
+        local curr_dict = immut.dict(mode)
 
         local expected_key_values = {} ---@type table<any, any>
         local expected_size = 0 ---@type integer
@@ -94,7 +94,7 @@ for _, mode in ipairs({ 'copy' }) do
             local new_key = get_random_key_or_value()
             local new_value = get_random_key_or_value()
 
-            curr_map = curr_map:insert(new_key, new_value)
+            curr_dict = curr_dict:insert(new_key, new_value)
 
             if expected_key_values[new_key] == nil then
                 expected_size = expected_size + 1
@@ -106,41 +106,41 @@ for _, mode in ipairs({ 'copy' }) do
         for _ = 1, REMOVE_COUNT do
             local rem_key = get_random_key_or_value()
 
-            local next_map = curr_map:remove(rem_key)
+            local next_dict = curr_dict:remove(rem_key)
 
             for _, key in ipairs(POSSIBLE_KEYS_OR_VALUES) do
                 if expected_key_values[key] ~= nil then
-                    assert(curr_map:has(key) == true)
-                    assert(curr_map:get(key) == expected_key_values[key])
+                    assert(curr_dict:has(key) == true)
+                    assert(curr_dict:get(key) == expected_key_values[key])
                 else
-                    assert(curr_map:has(key) == false)
-                    assert(curr_map:get(key) == nil)
+                    assert(curr_dict:has(key) == false)
+                    assert(curr_dict:get(key) == nil)
                 end
             end
 
             if expected_key_values[rem_key] ~= nil then
-                assert(curr_map ~= next_map)
+                assert(curr_dict ~= next_dict)
 
                 expected_key_values[rem_key] = nil
                 expected_size = expected_size - 1
             else
-                assert(curr_map == next_map)
+                assert(curr_dict == next_dict)
             end
 
-            assert(next_map:size() == expected_size)
-            assert(next_map:empty() == (expected_size == 0))
+            assert(next_dict:size() == expected_size)
+            assert(next_dict:empty() == (expected_size == 0))
 
             for _, key in ipairs(POSSIBLE_KEYS_OR_VALUES) do
                 if expected_key_values[key] ~= nil then
-                    assert(next_map:has(key) == true)
-                    assert(next_map:get(key) == expected_key_values[key])
+                    assert(next_dict:has(key) == true)
+                    assert(next_dict:get(key) == expected_key_values[key])
                 else
-                    assert(next_map:has(key) == false)
-                    assert(next_map:get(key) == nil)
+                    assert(next_dict:has(key) == false)
+                    assert(next_dict:get(key) == nil)
                 end
             end
 
-            curr_map = next_map
+            curr_dict = next_dict
         end
     end
 end

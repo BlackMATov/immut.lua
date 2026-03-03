@@ -1,14 +1,10 @@
-require 'develop.testing.map_tests'
-require 'develop.testing.set_tests'
+require 'develop.testing.dict_tests'
 
-require 'develop.benchmarks.map_bmarks'
-require 'develop.benchmarks.set_bmarks'
+require 'develop.benchmarks.dict_bmarks'
 
 local basics = require 'develop.basics'
 
 print '----------------------------------------'
-basics.describe_fuzz 'develop.fuzzing.map_fuzz'
-print '----------------------------------------'
-basics.describe_fuzz 'develop.fuzzing.set_fuzz'
+basics.describe_fuzz 'develop.fuzzing.dict_fuzz'
 
 print 'All tests passed.'

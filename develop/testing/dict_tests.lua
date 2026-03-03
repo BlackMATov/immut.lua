@@ -2,7 +2,7 @@ local immut = require 'immut'
 
 for _, mode in ipairs({ 'copy' }) do
     do
-        local m0 = immut.map(mode)
+        local m0 = immut.dict(mode)
 
         do
             assert(m0:size() == 0)
@@ -70,7 +70,7 @@ for _, mode in ipairs({ 'copy' }) do
     end
 
     do
-        local m2 = immut.map(mode):insert(42, 21):insert('hello', 'world')
+        local m2 = immut.dict(mode):insert(42, 21):insert('hello', 'world')
 
         do
             assert(m2:size() == 2)
