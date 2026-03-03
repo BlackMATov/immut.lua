@@ -23,6 +23,7 @@
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Cheat Sheet](#cheat-sheet)
+  - [List](#list)
   - [Dict](#dict)
 - [Changelog](#changelog)
 - [License](#license)
@@ -47,11 +48,33 @@ luarocks install immut.lua
 
 ## Cheat Sheet
 
+list_mode :: 'copy' | 'isll'
+AVAILABLE_LIST_MODES :: list_mode[]
+
+dict_mode :: 'copy' | 'hamt' | 'tree'
+AVAILABLE_DICT_MODES :: dict_mode[]
+
+### List
+
+```
+list :: list_mode -> list_mt
+
+list_mt:size -> integer
+list_mt:empty -> boolean
+
+list_mt:head -> any
+list_mt:last -> any
+
+list_mt:tail -> list_mt
+list_mt:init -> list_mt
+
+list_mt:cons :: any -> list_mt
+list_mt:snoc :: any -> list_mt
+```
+
 ### Dict
 
 ```
-dict_mode :: 'copy' | 'hamt' | 'tree'
-
 dict :: dict_mode -> dict_mt
 
 dict_mt:size -> integer

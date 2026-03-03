@@ -29,10 +29,39 @@ function basics.unload(pattern)
     end
 end
 
+function basics.describe_test(modname)
+    print(string.format('| %s ... |', modname))
+
+    collectgarbage('collect')
+    collectgarbage('stop')
+
+    do
+        local start_s = os.clock()
+        local start_kb = collectgarbage('count')
+
+        local success, result = pcall(function()
+            basics.unload(modname)
+            require(modname)
+        end)
+
+        local finish_s = os.clock()
+        local finish_kb = collectgarbage('count')
+
+        if success then
+            print(string.format('|-- PASS | us: %.2f | kb: %.2f',
+                (finish_s - start_s) * 1e6,
+                finish_kb - start_kb))
+        else
+            print('|-- TEST FAIL: ' .. result)
+        end
+    end
+
+    collectgarbage('restart')
+    collectgarbage('collect')
+end
+
 ---@param modname string
 function basics.describe_fuzz(modname)
-    basics.unload('immut')
-
     print(string.format('| %s ... |', modname))
 
     collectgarbage('collect')
@@ -75,8 +104,6 @@ end
 ---@param init? fun(): ...
 ---@param fini? fun(...): ...
 function basics.describe_bench(name, loop, init, fini)
-    basics.unload('immut')
-
     print(string.format('| %s ... |', name))
 
     local state = init and __table_pack(init()) or {}

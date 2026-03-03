@@ -30,7 +30,7 @@ local function update_possible_keys_or_values()
     end
 end
 
-for _, mode in ipairs({ 'copy' }) do
+for _, mode in ipairs(immut.AVAILABLE_DICT_MODES) do
     do
         update_possible_keys_or_values()
 

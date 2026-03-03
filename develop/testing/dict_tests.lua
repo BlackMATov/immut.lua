@@ -1,6 +1,6 @@
 local immut = require 'immut'
 
-for _, mode in ipairs({ 'copy' }) do
+for _, mode in ipairs(immut.AVAILABLE_DICT_MODES) do
     do
         local m0 = immut.dict(mode)
 

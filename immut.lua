@@ -29,7 +29,65 @@ local immut = {
 
 ---
 ---
---- DICT
+--- LIST API
+---
+---
+
+---@class immut.list
+local __list_mt = {}
+__list_mt.__index = __list_mt
+
+---Returns the number of elements in the list.
+---@return integer
+---@nodiscard
+function __list_mt:size() error 'not implemented' end
+
+---Returns `true` if the list contains no elements, `false` otherwise.
+---@return boolean
+---@nodiscard
+function __list_mt:empty() error 'not implemented' end
+
+---Retrieves the first element of the list.
+---Throws an error if the list is empty.
+---@return any
+---@nodiscard
+function __list_mt:head() error 'not implemented' end
+
+---Retrieves the last element of the list.
+---Throws an error if the list is empty.
+---@return any
+---@nodiscard
+function __list_mt:last() error 'not implemented' end
+
+---Retrieves a new list containing all elements of the original list except the first one.
+---Throws an error if the list is empty.
+---@return immut.list
+---@nodiscard
+function __list_mt:tail() error 'not implemented' end
+
+---Retrieves a new list containing all elements of the original list except the last one.
+---Throws an error if the list is empty.
+---@return immut.list
+---@nodiscard
+function __list_mt:init() error 'not implemented' end
+
+---Returns a new list with a given element added to the front of the list.
+---@param head any
+---@return immut.list
+---@nodiscard
+---@diagnostic disable-next-line: unused-local
+function __list_mt:cons(head) error 'not implemented' end
+
+---Returns a new list with a given element added to the end of the list.
+---@param last any
+---@return immut.list
+---@nodiscard
+---@diagnostic disable-next-line: unused-local
+function __list_mt:snoc(last) error 'not implemented' end
+
+---
+---
+--- DICT API
 ---
 ---
 
@@ -40,16 +98,12 @@ __dict_mt.__index = __dict_mt
 ---Returns the number of key-value pairs in the dict.
 ---@return integer
 ---@nodiscard
-function __dict_mt:size()
-    error 'not implemented yet'
-end
+function __dict_mt:size() error 'not implemented' end
 
 ---Returns `true` if the dict contains no key-value pairs, `false` otherwise.
 ---@return boolean
 ---@nodiscard
-function __dict_mt:empty()
-    error 'not implemented yet'
-end
+function __dict_mt:empty() error 'not implemented' end
 
 ---Associates a given key with a value in the dict, returning a new dict instance with the updated key-value pair.
 ---If the key already exists, its value is replaced with the new value.
@@ -58,9 +112,7 @@ end
 ---@return immut.dict
 ---@nodiscard
 ---@diagnostic disable-next-line: unused-local
-function __dict_mt:assoc(key, value)
-    error 'not implemented yet'
-end
+function __dict_mt:assoc(key, value) error 'not implemented' end
 
 ---Dissociates a given key from the dict, returning a new dict instance without the specified key.
 ---If the key does not exist, the original dict is returned unchanged.
@@ -68,9 +120,7 @@ end
 ---@return immut.dict
 ---@nodiscard
 ---@diagnostic disable-next-line: unused-local
-function __dict_mt:dissoc(key)
-    error 'not implemented yet'
-end
+function __dict_mt:dissoc(key) error 'not implemented' end
 
 ---Retrieves the value associated with a given key in the dict.
 ---If the key does not exist, it returns `nil`.
@@ -78,134 +128,36 @@ end
 ---@return any
 ---@nodiscard
 ---@diagnostic disable-next-line: unused-local
-function __dict_mt:lookup(key)
-    error 'not implemented yet'
-end
+function __dict_mt:lookup(key) error 'not implemented' end
 
 ---Checks if a given key exists in the dict, returning `true` if it does and `false` otherwise.
 ---@param key any
 ---@return boolean
 ---@nodiscard
 ---@diagnostic disable-next-line: unused-local
-function __dict_mt:contains(key)
-    error 'not implemented yet'
-end
+function __dict_mt:contains(key) error 'not implemented' end
 
 ---
 ---
---- DICT COPY
+--- LIST CTOR
 ---
 ---
 
----@class immut.dict_copy : immut.dict
-local __dict_copy_mt = setmetatable({}, __dict_mt)
-__dict_copy_mt.__index = __dict_copy_mt
+---@alias immut.list_mode
+---| 'copy' copy-based list implementation
+---| 'isll' immutable singly-linked list implementation
+immut.AVAILABLE_LIST_MODES = {}
 
----@return immut.dict_copy
+---@type table<immut.list_mode, immut.list>
+local __empty_lists = {}
+
+---@param mode immut.list_mode
+---@return immut.list
 ---@nodiscard
-local function __dict_copy()
-    return setmetatable({}, __dict_copy_mt)
-end
-
----@return integer
----@nodiscard
-function __dict_copy_mt:size()
-    local size = 0
-
-    for _ in pairs(self) do
-        size = size + 1
-    end
-
-    return size
-end
-
----@return boolean
----@nodiscard
-function __dict_copy_mt:empty()
-    return next(self) == nil
-end
-
----@param key any
----@param value any
----@return immut.dict_copy
----@nodiscard
-function __dict_copy_mt:assoc(key, value)
-    if self[key] == value then
-        return self
-    end
-
-    local new_dict = __dict_copy()
-
-    for k, v in pairs(self) do
-        new_dict[k] = v
-    end
-
-    new_dict[key] = value
-    return new_dict
-end
-
----@param key any
----@return immut.dict_copy
----@nodiscard
-function __dict_copy_mt:dissoc(key)
-    if self[key] == nil then
-        return self
-    end
-
-    local new_dict = __dict_copy()
-
-    for k, v in pairs(self) do
-        new_dict[k] = v
-    end
-
-    new_dict[key] = nil
-    return new_dict
-end
-
----@param key any
----@return any
----@nodiscard
-function __dict_copy_mt:lookup(key)
-    return self[key]
-end
-
----@param key any
----@return boolean
----@nodiscard
-function __dict_copy_mt:contains(key)
-    return self[key] ~= nil
-end
-
----
----
---- DICT HAMT
----
----
-
----@class immut.dict_hamt : immut.dict
-local __dict_hamt_mt = setmetatable({}, __dict_mt)
-__dict_hamt_mt.__index = __dict_hamt_mt
-
----@return immut.dict_hamt
----@nodiscard
-local function __dict_hamt()
-    return setmetatable({}, __dict_hamt_mt)
-end
-
----
----
---- DICT TREE
----
----
-
----@class immut.dict_tree : immut.dict
-local __dict_tree_mt = setmetatable({}, __dict_mt)
-__dict_tree_mt.__index = __dict_tree_mt
-
----@return immut.dict_tree
----@nodiscard
-local function __dict_tree()
-    return setmetatable({}, __dict_tree_mt)
+function immut.list(mode)
+    return __empty_lists[mode] or error(string.format(
+        'invalid list mode: %s, expected one of: %s',
+        tostring(mode), table.concat(immut.AVAILABLE_LIST_MODES, ', ')))
 end
 
 ---
@@ -214,22 +166,195 @@ end
 ---
 ---
 
----@alias immut.dict_mode 'copy' | 'hamt' | 'tree'
+---@alias immut.dict_mode
+---| 'copy' copy-based dict implementation
+---| 'hamt' hash array mapped trie dict implementation
+---| 'tree' balanced binary search tree dict implementation
+immut.AVAILABLE_DICT_MODES = {}
 
----@type table<immut.dict_mode, fun(): immut.dict>
-local __DICT_CTORS = {
-    copy = __dict_copy,
-    hamt = __dict_hamt,
-    tree = __dict_tree,
-}
+---@type table<immut.dict_mode, immut.dict>
+local __empty_dicts = {}
 
 ---@param mode immut.dict_mode
 ---@return immut.dict
 ---@nodiscard
 function immut.dict(mode)
-    return (__DICT_CTORS[mode] or function()
-        error(string.format('invalid dict mode: %s', tostring(mode)))
-    end)()
+    return __empty_dicts[mode] or error(string.format(
+        'invalid dict mode: %s, expected one of: %s',
+        tostring(mode), table.concat(immut.AVAILABLE_DICT_MODES, ', ')))
 end
+
+---
+---
+--- COPY LIST IMPLEMENTATION
+---
+---
+
+---@class immut.copy_list : immut.list
+---@field package __size integer
+---@field package __elems any[]
+local __copy_list_mt = setmetatable({}, __list_mt)
+__copy_list_mt.__index = __copy_list_mt
+
+local function copy_list_new()
+    return setmetatable({ __size = 0, __elems = {} }, __copy_list_mt)
+end
+
+__empty_lists['copy'] = copy_list_new()
+immut.AVAILABLE_LIST_MODES[#immut.AVAILABLE_LIST_MODES + 1] = 'copy'
+
+function __copy_list_mt:size()
+    return self.__size
+end
+
+function __copy_list_mt:empty()
+    return self.__size == 0
+end
+
+function __copy_list_mt:head()
+    return self.__elems[1]
+end
+
+function __copy_list_mt:last()
+    return self.__elems[self.__size]
+end
+
+function __copy_list_mt:tail()
+    if self.__size == 0 then
+        return nil
+    end
+
+    local tail = copy_list_new()
+
+    for i = 2, self.__size do
+        tail.__elems[i - 1] = self.__elems[i]
+    end
+
+    tail.__size = self.__size - 1
+
+    return tail
+end
+
+function __copy_list_mt:init()
+    if self.__size == 0 then
+        return nil
+    end
+
+    local init = copy_list_new()
+
+    for i = 1, self.__size - 1 do
+        init.__elems[i] = self.__elems[i]
+    end
+
+    init.__size = self.__size - 1
+
+    return init
+end
+
+function __copy_list_mt:cons(head)
+    local new_list = copy_list_new()
+
+    new_list.__elems[1] = head
+
+    for i = 1, self.__size do
+        new_list.__elems[i + 1] = self.__elems[i]
+    end
+
+    new_list.__size = self.__size + 1
+
+    return new_list
+end
+
+function __copy_list_mt:snoc(last)
+    local new_list = copy_list_new()
+
+    for i = 1, self.__size do
+        new_list.__elems[i] = self.__elems[i]
+    end
+
+    new_list.__elems[self.__size + 1] = last
+    new_list.__size = self.__size + 1
+
+    return new_list
+end
+
+---
+---
+--- COPY DICT IMPLEMENTATION
+---
+---
+
+---@class immut.copy_dict : immut.dict
+---@field package __size integer
+---@field package __pairs table<any, any>
+local __copy_dict_mt = setmetatable({}, __dict_mt)
+__copy_dict_mt.__index = __copy_dict_mt
+
+local function copy_dict_new()
+    return setmetatable({ __size = 0, __pairs = {} }, __copy_dict_mt)
+end
+
+__empty_dicts['copy'] = copy_dict_new()
+immut.AVAILABLE_DICT_MODES[#immut.AVAILABLE_DICT_MODES + 1] = 'copy'
+
+function __copy_dict_mt:size()
+    return self.__size
+end
+
+function __copy_dict_mt:empty()
+    return self.__size == 0
+end
+
+function __copy_dict_mt:assoc(key, value)
+    local self_value = self.__pairs[key]
+
+    if self_value == value then
+        return self
+    end
+
+    local new_dict = copy_dict_new()
+
+    for k, v in pairs(self.__pairs) do
+        new_dict.__pairs[k] = v
+    end
+
+    new_dict.__pairs[key] = value
+    new_dict.__size = self.__size + (self_value == nil and 1 or 0)
+
+    return new_dict
+end
+
+function __copy_dict_mt:dissoc(key)
+    local self_value = self.__pairs[key]
+
+    if self_value == nil then
+        return self
+    end
+
+    local new_dict = copy_dict_new()
+
+    for k, v in pairs(self.__pairs) do
+        new_dict.__pairs[k] = v
+    end
+
+    new_dict.__pairs[key] = nil
+    new_dict.__size = self.__size - 1
+
+    return new_dict
+end
+
+function __copy_dict_mt:lookup(key)
+    return self.__pairs[key]
+end
+
+function __copy_dict_mt:contains(key)
+    return self.__pairs[key] ~= nil
+end
+
+---
+---
+---
+---
+---
 
 return immut

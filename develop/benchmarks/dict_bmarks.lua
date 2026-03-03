@@ -3,9 +3,7 @@ local basics = require 'develop.basics'
 
 local NS = { 20, 100, 500 }
 
-for _, mode in ipairs({ 'copy' }) do
-    print '----------------------------------------'
-
+for _, mode in ipairs(immut.AVAILABLE_DICT_MODES) do
     for _, N in ipairs(NS) do
         basics.describe_bench(
             string.format('Dict (%s) Benchmarks: Assoc %d random elements', mode, N),
@@ -19,8 +17,6 @@ for _, mode in ipairs({ 'copy' }) do
             end)
     end
 
-    print '----------------------------------------'
-
     for _, N in ipairs(NS) do
         basics.describe_bench(
             string.format('Dict (%s) Benchmarks: Assoc %d ascending elements', mode, N),
@@ -32,8 +28,6 @@ for _, mode in ipairs({ 'copy' }) do
                 end
             end)
     end
-
-    print '----------------------------------------'
 
     for _, N in ipairs(NS) do
         basics.describe_bench(
