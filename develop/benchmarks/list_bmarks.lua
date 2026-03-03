@@ -16,17 +16,4 @@ for _, mode in ipairs(immut.AVAILABLE_LIST_MODES) do
                 end
             end)
     end
-
-    for _, N in ipairs(NS) do
-        basics.describe_bench(
-            string.format('List (%s) Benchmarks: Snoc %d random elements', mode, N),
-            function()
-                local l = immut.list(mode)
-
-                for _ = 1, N do
-                    local v = math.random(1, N)
-                    l = l:snoc(v)
-                end
-            end)
-    end
 end

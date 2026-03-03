@@ -1,12 +1,15 @@
 local basics = require 'develop.basics'
 
+print '----------------------------------------'
 basics.describe_test 'develop.testing.dict_tests'
 basics.describe_test 'develop.testing.list_tests'
-
+print '----------------------------------------'
 basics.describe_fuzz 'develop.fuzzing.dict_fuzz'
 basics.describe_fuzz 'develop.fuzzing.list_fuzz'
-
+print '----------------------------------------'
 require 'develop.benchmarks.dict_bmarks'
+print '----------------------------------------'
 require 'develop.benchmarks.list_bmarks'
+print '----------------------------------------'
 
 print 'All tests passed.'

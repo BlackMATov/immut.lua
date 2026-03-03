@@ -48,25 +48,25 @@ function __list_mt:size() error 'not implemented' end
 function __list_mt:empty() error 'not implemented' end
 
 ---Retrieves the first element of the list.
----Throws an error if the list is empty.
+---If the list is empty, it returns `nil`.
 ---@return any
 ---@nodiscard
 function __list_mt:head() error 'not implemented' end
 
 ---Retrieves the last element of the list.
----Throws an error if the list is empty.
+---If the list is empty, it returns `nil`.
 ---@return any
 ---@nodiscard
 function __list_mt:last() error 'not implemented' end
 
 ---Retrieves a new list containing all elements of the original list except the first one.
----Throws an error if the list is empty.
+---If the list is empty, it returns `nil`.
 ---@return immut.list
 ---@nodiscard
 function __list_mt:tail() error 'not implemented' end
 
 ---Retrieves a new list containing all elements of the original list except the last one.
----Throws an error if the list is empty.
+---If the list is empty, it returns `nil`.
 ---@return immut.list
 ---@nodiscard
 function __list_mt:init() error 'not implemented' end
