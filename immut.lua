@@ -75,7 +75,7 @@ end
 ---@return any
 ---@nodiscard
 ---@diagnostic disable-next-line: unused-local
-function __dict_mt:get(key)
+function __dict_mt:lookup(key)
     error 'not implemented yet'
 end
 
@@ -84,7 +84,7 @@ end
 ---@return boolean
 ---@nodiscard
 ---@diagnostic disable-next-line: unused-local
-function __dict_mt:has(key)
+function __dict_mt:contains(key)
     error 'not implemented yet'
 end
 
@@ -162,14 +162,14 @@ end
 ---@param key any
 ---@return any
 ---@nodiscard
-function __dict_copy_mt:get(key)
+function __dict_copy_mt:lookup(key)
     return self[key]
 end
 
 ---@param key any
 ---@return boolean
 ---@nodiscard
-function __dict_copy_mt:has(key)
+function __dict_copy_mt:contains(key)
     return self[key] ~= nil
 end
 

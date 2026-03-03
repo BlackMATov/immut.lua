@@ -60,8 +60,8 @@ dict_mt:empty -> boolean
 dict_mt:insert :: any, any -> dict_mt
 dict_mt:remove :: any -> dict_mt
 
-dict_mt:get :: any -> any
-dict_mt:has :: any -> boolean
+dict_mt:lookup :: any -> any
+dict_mt:contains :: any -> boolean
 ```
 
 ## Changelog

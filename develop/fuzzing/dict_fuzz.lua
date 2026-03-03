@@ -8,7 +8,7 @@ local POSSIBLE_KEYS_OR_VALUES = {}
 
 ---@return any
 ---@nodiscard
-local function get_random_key_or_value()
+local function random_key_or_value()
     return POSSIBLE_KEYS_OR_VALUES[math.random(1, #POSSIBLE_KEYS_OR_VALUES)]
 end
 
@@ -40,18 +40,18 @@ for _, mode in ipairs({ 'copy' }) do
         local expected_size = 0 ---@type integer
 
         for _ = 1, INSERT_COUNT do
-            local new_key = get_random_key_or_value()
-            local new_value = get_random_key_or_value()
+            local new_key = random_key_or_value()
+            local new_value = random_key_or_value()
 
             local next_dict = curr_dict:insert(new_key, new_value)
 
             for _, key in ipairs(POSSIBLE_KEYS_OR_VALUES) do
                 if expected_key_values[key] ~= nil then
-                    assert(curr_dict:has(key) == true)
-                    assert(curr_dict:get(key) == expected_key_values[key])
+                    assert(curr_dict:contains(key) == true)
+                    assert(curr_dict:lookup(key) == expected_key_values[key])
                 else
-                    assert(curr_dict:has(key) == false)
-                    assert(curr_dict:get(key) == nil)
+                    assert(curr_dict:contains(key) == false)
+                    assert(curr_dict:lookup(key) == nil)
                 end
             end
 
@@ -72,11 +72,11 @@ for _, mode in ipairs({ 'copy' }) do
 
             for _, key in ipairs(POSSIBLE_KEYS_OR_VALUES) do
                 if expected_key_values[key] ~= nil then
-                    assert(next_dict:has(key) == true)
-                    assert(next_dict:get(key) == expected_key_values[key])
+                    assert(next_dict:contains(key) == true)
+                    assert(next_dict:lookup(key) == expected_key_values[key])
                 else
-                    assert(next_dict:has(key) == false)
-                    assert(next_dict:get(key) == nil)
+                    assert(next_dict:contains(key) == false)
+                    assert(next_dict:lookup(key) == nil)
                 end
             end
 
@@ -91,8 +91,8 @@ for _, mode in ipairs({ 'copy' }) do
         local expected_size = 0 ---@type integer
 
         for _ = 1, INSERT_COUNT do
-            local new_key = get_random_key_or_value()
-            local new_value = get_random_key_or_value()
+            local new_key = random_key_or_value()
+            local new_value = random_key_or_value()
 
             curr_dict = curr_dict:insert(new_key, new_value)
 
@@ -104,17 +104,17 @@ for _, mode in ipairs({ 'copy' }) do
         end
 
         for _ = 1, REMOVE_COUNT do
-            local rem_key = get_random_key_or_value()
+            local rem_key = random_key_or_value()
 
             local next_dict = curr_dict:remove(rem_key)
 
             for _, key in ipairs(POSSIBLE_KEYS_OR_VALUES) do
                 if expected_key_values[key] ~= nil then
-                    assert(curr_dict:has(key) == true)
-                    assert(curr_dict:get(key) == expected_key_values[key])
+                    assert(curr_dict:contains(key) == true)
+                    assert(curr_dict:lookup(key) == expected_key_values[key])
                 else
-                    assert(curr_dict:has(key) == false)
-                    assert(curr_dict:get(key) == nil)
+                    assert(curr_dict:contains(key) == false)
+                    assert(curr_dict:lookup(key) == nil)
                 end
             end
 
@@ -132,11 +132,11 @@ for _, mode in ipairs({ 'copy' }) do
 
             for _, key in ipairs(POSSIBLE_KEYS_OR_VALUES) do
                 if expected_key_values[key] ~= nil then
-                    assert(next_dict:has(key) == true)
-                    assert(next_dict:get(key) == expected_key_values[key])
+                    assert(next_dict:contains(key) == true)
+                    assert(next_dict:lookup(key) == expected_key_values[key])
                 else
-                    assert(next_dict:has(key) == false)
-                    assert(next_dict:get(key) == nil)
+                    assert(next_dict:contains(key) == false)
+                    assert(next_dict:lookup(key) == nil)
                 end
             end
 
