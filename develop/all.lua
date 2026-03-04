@@ -11,7 +11,7 @@ require 'develop.benchmarks.dict_bmarks'
 print '----------------------------------------'
 require 'develop.benchmarks.list_bmarks'
 print '----------------------------------------'
-require 'develop.benchmarks.util_bmarks'
+require 'develop.benchmarks.utilities.djb2_bmarks'
 print '----------------------------------------'
 
 print 'All tests passed.'

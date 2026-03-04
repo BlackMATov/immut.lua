@@ -86,14 +86,6 @@ local function __djb2_unrolled(s)
     return h
 end
 
-basics.describe_bench(
-    string.format('Utilities Benchmarks: receive %d random elements', N),
-    function()
-        for _ = 1, N do
-            local _ = __math_random(0, 255)
-        end
-    end)
-
 local __random_strings = (function()
     local strings = {} ---@type string[]
 
@@ -115,15 +107,19 @@ end)()
 basics.describe_bench(
     string.format('Utilities Benchmarks: djb2 %d random strings', N),
     function()
+        local s = 0
         for i = 1, N do
-            local _ = __djb2(__random_strings[i])
+            s = s + __djb2(__random_strings[i])
         end
+        return s
     end)
 
 basics.describe_bench(
     string.format('Utilities Benchmarks: djb2_unrolled %d random strings', N),
     function()
+        local s = 0
         for i = 1, N do
-            local _ = __djb2_unrolled(__random_strings[i])
+            s = s + __djb2_unrolled(__random_strings[i])
         end
+        return s
     end)
