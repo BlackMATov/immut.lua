@@ -13,5 +13,7 @@ require 'develop.benchmarks.list_bmarks'
 print '----------------------------------------'
 require 'develop.benchmarks.utilities.djb2_bmarks'
 print '----------------------------------------'
+require 'develop.benchmarks.utilities.popcount32_bmarks'
+print '----------------------------------------'
 
 print 'All tests passed.'
