@@ -3,7 +3,11 @@ local basics = require 'develop.basics'
 
 local NS = { 20, 100, 500 }
 
-for _, mode in ipairs(immut.AVAILABLE_LIST_MODES) do
+for mode_index, mode in ipairs(immut.AVAILABLE_LIST_MODES) do
+    if mode_index > 1 then
+        print '----------------------------------------'
+    end
+
     for _, N in ipairs(NS) do
         basics.describe_bench(
             string.format('List (%s) Benchmarks: Cons %d random elements', mode, N),

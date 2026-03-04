@@ -18,11 +18,15 @@ local function update_possible_keys_or_values()
         if r == 1 then
             POSSIBLE_KEYS_OR_VALUES[#POSSIBLE_KEYS_OR_VALUES + 1] = math.random(1, 10)
         elseif r == 2 then
-            POSSIBLE_KEYS_OR_VALUES[#POSSIBLE_KEYS_OR_VALUES + 1] = string.char(math.random(97, 122))
+            local chars = {}
+            for i = 1, math.random(0, 10) do
+                chars[i] = string.char(math.random(97, 122))
+            end
+            POSSIBLE_KEYS_OR_VALUES[#POSSIBLE_KEYS_OR_VALUES + 1] = table.concat(chars)
         elseif r == 3 then
             POSSIBLE_KEYS_OR_VALUES[#POSSIBLE_KEYS_OR_VALUES + 1] = math.random() < 0.5
         elseif r == 4 then
-            POSSIBLE_KEYS_OR_VALUES[#POSSIBLE_KEYS_OR_VALUES + 1] = math.random() * 100
+            POSSIBLE_KEYS_OR_VALUES[#POSSIBLE_KEYS_OR_VALUES + 1] = -100 + math.random() * 200
         else
             error 'unreachable'
         end

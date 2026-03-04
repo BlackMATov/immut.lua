@@ -39,10 +39,10 @@ function basics.describe_test(modname)
         local start_s = os.clock()
         local start_kb = collectgarbage('count')
 
-        local success, result = pcall(function()
+        local success, result = xpcall(function()
             basics.unload(modname)
             require(modname)
-        end)
+        end, debug.traceback)
 
         local finish_s = os.clock()
         local finish_kb = collectgarbage('count')
@@ -73,13 +73,13 @@ function basics.describe_fuzz(modname)
         local start_s = os.clock()
         local start_kb = collectgarbage('count')
 
-        local success, result = pcall(function()
+        local success, result = xpcall(function()
             repeat
                 iters = iters + 1
                 basics.unload(modname)
                 require(modname)
             until iters >= MIN_FUZZ_ITERS and os.clock() - start_s >= MIN_FUZZ_SECS
-        end)
+        end, debug.traceback)
 
         local finish_s = os.clock()
         local finish_kb = collectgarbage('count')
@@ -113,12 +113,12 @@ function basics.describe_bench(name, loop, init, fini)
 
         local warmup_s = os.clock()
 
-        local success, result = pcall(function()
+        local success, result = xpcall(function()
             repeat
                 iters = iters + 1
                 loop(__table_unpack(state))
             until iters >= MIN_WARMUP_ITERS and os.clock() - warmup_s > MIN_WARMUP_SECS
-        end)
+        end, debug.traceback)
 
         if not success then
             print('|-- WARMUP FAIL: ' .. result)
@@ -135,12 +135,12 @@ function basics.describe_bench(name, loop, init, fini)
         local start_s = os.clock()
         local start_kb = collectgarbage('count')
 
-        local success, result = pcall(function()
+        local success, result = xpcall(function()
             repeat
                 iters = iters + 1
                 loop(__table_unpack(state))
             until iters >= MIN_BENCH_ITERS and os.clock() - start_s > MIN_BENCH_SECS
-        end)
+        end, debug.traceback)
 
         local finish_s = os.clock()
         local finish_kb = collectgarbage('count')
@@ -157,9 +157,9 @@ function basics.describe_bench(name, loop, init, fini)
     end
 
     if fini then
-        local success, result = pcall(function()
+        local success, result = xpcall(function()
             fini(__table_unpack(state))
-        end)
+        end, debug.traceback)
 
         if not success then
             print('|-- FINI FAIL: ' .. result)

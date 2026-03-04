@@ -3,7 +3,11 @@ local basics = require 'develop.basics'
 
 local NS = { 20, 100, 500 }
 
-for _, mode in ipairs(immut.AVAILABLE_DICT_MODES) do
+for mode_index, mode in ipairs(immut.AVAILABLE_DICT_MODES) do
+    if mode_index > 1 then
+        print '----------------------------------------'
+    end
+
     for _, N in ipairs(NS) do
         basics.describe_bench(
             string.format('Dict (%s) Benchmarks: Assoc %d random elements', mode, N),
