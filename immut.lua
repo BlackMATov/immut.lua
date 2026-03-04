@@ -353,6 +353,117 @@ end
 
 ---
 ---
+--- HAMT IMPLEMENTATION
+---
+---
+
+---@alias immut.hamt_key any
+---@alias immut.hamt_hash integer
+---@alias immut.hamt_value any
+
+---@class immut.hamt_node
+
+---@diagnostic disable-next-line: unused-local
+local function __hamt_hash(key)
+    return 0
+end
+
+---@param node immut.hamt_node
+---@param shift integer
+---@param key immut.hamt_key
+---@param hash immut.hamt_hash
+---@param value immut.hamt_value
+---@return immut.hamt_node new_node
+---@return integer size_delta
+---@return boolean changed
+---@nodiscard
+---@diagnostic disable-next-line: unused-local
+local function __hamt_assoc(node, shift, key, hash, value)
+end
+
+---@param node immut.hamt_node
+---@param shift integer
+---@param key immut.hamt_key
+---@param hash immut.hamt_hash
+---@return immut.hamt_node new_node
+---@return integer size_delta
+---@return boolean changed
+---@nodiscard
+---@diagnostic disable-next-line: unused-local
+local function __hamt_dissoc(node, shift, key, hash)
+end
+
+---@param node immut.hamt_node
+---@param shift integer
+---@param key immut.hamt_key
+---@param hash immut.hamt_hash
+---@return immut.hamt_value value
+---@nodiscard
+---@diagnostic disable-next-line: unused-local
+local function __hamt_lookup(node, shift, key, hash)
+end
+
+---
+---
+--- HAMT DICT IMPLEMENTATION
+---
+---
+
+---@class immut.hamt_dict : immut.dict
+---@field package __size integer
+---@field package __root immut.hamt_node
+local __hamt_dict_mt = setmetatable({}, __dict_mt)
+__hamt_dict_mt.__index = __hamt_dict_mt
+
+local function hamt_dict_new()
+    return setmetatable({ __size = 0, __root = nil }, __hamt_dict_mt)
+end
+
+__empty_dicts['hamt'] = hamt_dict_new()
+immut.AVAILABLE_DICT_MODES[#immut.AVAILABLE_DICT_MODES + 1] = 'hamt'
+
+function __hamt_dict_mt:size()
+    return self.__size
+end
+
+function __hamt_dict_mt:empty()
+    return self.__size == 0
+end
+
+function __hamt_dict_mt:assoc(key, value)
+    local hash = __hamt_hash(key)
+
+    local new_root, size_delta, changed = __hamt_assoc(self.__root, 0, key, hash, value)
+
+    if not changed then
+        return self
+    end
+
+    return setmetatable({ __size = self.__size + size_delta, __root = new_root }, __hamt_dict_mt)
+end
+
+function __hamt_dict_mt:dissoc(key)
+    local hash = __hamt_hash(key)
+
+    local new_root, size_delta, changed = __hamt_dissoc(self.__root, 0, key, hash)
+
+    if not changed then
+        return self
+    end
+
+    return setmetatable({ __size = self.__size + size_delta, __root = new_root }, __hamt_dict_mt)
+end
+
+function __hamt_dict_mt:lookup(key)
+    return __hamt_lookup(self.__root, 0, key, __hamt_hash(key))
+end
+
+function __hamt_dict_mt:contains(key)
+    return __hamt_lookup(self.__root, 0, key, __hamt_hash(key)) ~= nil
+end
+
+---
+---
 ---
 ---
 ---
