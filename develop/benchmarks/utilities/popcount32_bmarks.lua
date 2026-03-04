@@ -40,8 +40,8 @@ if __bit then
     __popcount32_naiv_with_bit = function(v)
         local sum = 0
         while v ~= 0 do
-            sum = sum + __bit.band(v, 1)
-            v = __bit.rshift(v, 1)
+            v = __bit.band(v, v - 1)
+            sum = sum + 1
         end
         return sum
     end
@@ -50,8 +50,8 @@ elseif __load_string then
         return function(v)
             local sum = 0
             while v ~= 0 do
-                sum = sum + (v & 1)
-                v = v >> 1
+                v = v & (v - 1)
+                sum = sum + 1
             end
             return sum
         end
