@@ -132,7 +132,9 @@ if __bit then
         v = v - __bit.band(__bit.rshift(v, 1), 0x55555555)
         v = __bit.band(v, 0x33333333) + __bit.band(__bit.rshift(v, 2), 0x33333333)
         v = __bit.band(v + __bit.rshift(v, 4), 0x0F0F0F0F)
-        return __bit.band(v + __bit.rshift(v, 8) + __bit.rshift(v, 16) + __bit.rshift(v, 24), 0xFF)
+        v = v + __bit.rshift(v, 8)
+        v = v + __bit.rshift(v, 16)
+        return __bit.band(v, 0x3F)
     end
 elseif __load_string then
     local loader = __load_string [[
@@ -140,7 +142,9 @@ elseif __load_string then
             v = v - ((v >> 1) & 0x55555555)
             v = (v & 0x33333333) + ((v >> 2) & 0x33333333)
             v = (v + (v >> 4)) & 0x0F0F0F0F
-            return (v + (v >> 8) + (v >> 16) + (v >> 24)) & 0xFF
+            v = v + (v >> 8)
+            v = v + (v >> 16)
+            return v & 0x3F
         end
     ]]
 
