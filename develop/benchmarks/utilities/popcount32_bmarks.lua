@@ -162,24 +162,28 @@ local __random_integers = (function()
         local v = hi * 2 ^ 16 + lo
 
         integers[#integers + 1] = v
-
-        assert(__popcount32_naiv(v) == __popcount32_lut8(v))
-
-        if __popcount32_naiv_with_bit then
-            assert(__popcount32_naiv(v) == __popcount32_naiv_with_bit(v))
-        end
-
-        if __popcount32_lut8_with_bit then
-            assert(__popcount32_naiv(v) == __popcount32_lut8_with_bit(v))
-        end
-
-        if __popcount32_hamming_weight_with_bit then
-            assert(__popcount32_naiv(v) == __popcount32_hamming_weight_with_bit(v))
-        end
     end
 
     return integers
 end)()
+
+for i = 1, N do
+    local v = __random_integers[i]
+
+    assert(__popcount32_naiv(v) == __popcount32_lut8(v))
+
+    if __popcount32_naiv_with_bit then
+        assert(__popcount32_naiv(v) == __popcount32_naiv_with_bit(v))
+    end
+
+    if __popcount32_lut8_with_bit then
+        assert(__popcount32_naiv(v) == __popcount32_lut8_with_bit(v))
+    end
+
+    if __popcount32_hamming_weight_with_bit then
+        assert(__popcount32_naiv(v) == __popcount32_hamming_weight_with_bit(v))
+    end
+end
 
 basics.describe_bench(
     string.format('Utilities Benchmarks: popcount32_naiv %d random integers', N),

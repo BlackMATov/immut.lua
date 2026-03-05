@@ -52,7 +52,7 @@ function basics.describe_test(modname)
                 (finish_s - start_s) * 1e6,
                 finish_kb - start_kb))
         else
-            print('|-- TEST FAIL: ' .. result)
+            error('|-- TEST FAIL: ' .. result)
         end
     end
 
@@ -91,7 +91,7 @@ function basics.describe_fuzz(modname)
                 (finish_kb - start_kb) / iters,
                 iters))
         else
-            print('|-- FUZZ FAIL: ' .. result)
+            error('|-- FUZZ FAIL: ' .. result)
         end
     end
 
@@ -121,8 +121,7 @@ function basics.describe_bench(name, loop, init, fini)
         end, debug.traceback)
 
         if not success then
-            print('|-- WARMUP FAIL: ' .. result)
-            return
+            error('|-- WARMUP FAIL: ' .. result)
         end
     end
 
@@ -152,7 +151,7 @@ function basics.describe_bench(name, loop, init, fini)
                 (finish_kb - start_kb) / iters,
                 iters))
         else
-            print('|-- LOOP FAIL: ' .. result)
+            error('|-- LOOP FAIL: ' .. result)
         end
     end
 
@@ -162,7 +161,7 @@ function basics.describe_bench(name, loop, init, fini)
         end, debug.traceback)
 
         if not success then
-            print('|-- FINI FAIL: ' .. result)
+            error('|-- FINI FAIL: ' .. result)
         end
     end
 

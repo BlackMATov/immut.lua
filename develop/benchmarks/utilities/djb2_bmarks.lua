@@ -97,12 +97,16 @@ local __random_strings = (function()
         end
 
         strings[#strings + 1] = s
-
-        assert(__djb2(s) == __djb2_unrolled(s))
     end
 
     return strings
 end)()
+
+for i = 1, N do
+    local s = __random_strings[i]
+
+    assert(__djb2(s) == __djb2_unrolled(s))
+end
 
 basics.describe_bench(
     string.format('Utilities Benchmarks: djb2 %d random strings', N),
