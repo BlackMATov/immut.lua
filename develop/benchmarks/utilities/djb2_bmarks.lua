@@ -30,11 +30,7 @@ end
 local function __djb2_unrolled(s)
     local i, l, h = 1, #s, 5381
 
-    local l8 = l - (l % 8)
-    local l4 = l - (l % 4)
-    local l2 = l - (l % 2)
-
-    while i <= l8 do
+    while i <= l - 7 do
         local c1, c2, c3, c4, c5, c6, c7, c8 = __string_byte(s, i, i + 7)
 
         h = h * 33 + c1
@@ -52,7 +48,7 @@ local function __djb2_unrolled(s)
         i = i + 8
     end
 
-    while i <= l4 do
+    while i <= l - 3 do
         local c1, c2, c3, c4 = __string_byte(s, i, i + 3)
 
         h = h * 33 + c1
@@ -64,7 +60,7 @@ local function __djb2_unrolled(s)
         i = i + 4
     end
 
-    while i <= l2 do
+    while i <= l - 1 do
         local c1, c2 = __string_byte(s, i, i + 1)
 
         h = h * 33 + c1
@@ -89,7 +85,17 @@ end
 local __random_strings = (function()
     local strings = {} ---@type string[]
 
-    for _ = 1, N do
+    do
+        local s = ''
+
+        for _ = 1, 17 do
+            s = s .. __string_char(255)
+        end
+
+        strings[#strings + 1] = s
+    end
+
+    for _ = 2, N do
         local s, l = '', __math_random(0, 32)
 
         for _ = 1, l do
