@@ -420,7 +420,7 @@ local function hamt_dict_new()
 end
 
 __empty_dicts['hamt'] = hamt_dict_new()
-immut.AVAILABLE_DICT_MODES[#immut.AVAILABLE_DICT_MODES + 1] = 'hamt'
+-- immut.AVAILABLE_DICT_MODES[#immut.AVAILABLE_DICT_MODES + 1] = 'hamt'
 
 function __hamt_dict_mt:size()
     return self.__size
