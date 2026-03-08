@@ -2,8 +2,9 @@ local basics = require 'develop.basics'
 
 local N = 10000
 
-local __bit = _G['bit'] or _G['bit32']
 local __math_random = math.random
+
+local __bit = _G['bit'] or _G['bit32']
 ---@diagnostic disable-next-line: deprecated
 local __load_string = _G['loadstring'] or _G['load']
 
@@ -159,7 +160,7 @@ local __random_integers = (function()
     integers[#integers + 1] = 0
     integers[#integers + 1] = 2 ^ 32 - 1
 
-    for _ = 3, N do
+    for _ = 1, N - #integers do
         local hi = __math_random(0, 2 ^ 16 - 1)
         local lo = __math_random(0, 2 ^ 16 - 1)
 
@@ -171,7 +172,7 @@ local __random_integers = (function()
     return integers
 end)()
 
-for i = 1, N do
+for i = 1, #__random_integers do
     local v = __random_integers[i]
 
     assert(__popcount32_naiv(v) == __popcount32_lut8(v))
@@ -190,10 +191,10 @@ for i = 1, N do
 end
 
 basics.describe_bench(
-    string.format('Utilities Benchmarks: popcount32_naiv %d random integers', N),
+    string.format('Utilities Benchmarks: popcount32_naiv %d random integers', #__random_integers),
     function()
         local s = 0
-        for i = 1, N do
+        for i = 1, #__random_integers do
             s = s + __popcount32_naiv(__random_integers[i])
         end
         return s
@@ -201,10 +202,10 @@ basics.describe_bench(
 
 if __popcount32_naiv_with_bit then
     basics.describe_bench(
-        string.format('Utilities Benchmarks: popcount32_naiv_with_bit %d random integers', N),
+        string.format('Utilities Benchmarks: popcount32_naiv_with_bit %d random integers', #__random_integers),
         function()
             local s = 0
-            for i = 1, N do
+            for i = 1, #__random_integers do
                 s = s + __popcount32_naiv_with_bit(__random_integers[i])
             end
             return s
@@ -212,10 +213,10 @@ if __popcount32_naiv_with_bit then
 end
 
 basics.describe_bench(
-    string.format('Utilities Benchmarks: popcount32_lut8 %d random integers', N),
+    string.format('Utilities Benchmarks: popcount32_lut8 %d random integers', #__random_integers),
     function()
         local s = 0
-        for i = 1, N do
+        for i = 1, #__random_integers do
             s = s + __popcount32_lut8(__random_integers[i])
         end
         return s
@@ -223,10 +224,10 @@ basics.describe_bench(
 
 if __popcount32_lut8_with_bit then
     basics.describe_bench(
-        string.format('Utilities Benchmarks: popcount32_lut8_with_bit %d random integers', N),
+        string.format('Utilities Benchmarks: popcount32_lut8_with_bit %d random integers', #__random_integers),
         function()
             local s = 0
-            for i = 1, N do
+            for i = 1, #__random_integers do
                 s = s + __popcount32_lut8_with_bit(__random_integers[i])
             end
             return s
@@ -235,10 +236,10 @@ end
 
 if __popcount32_hamming_weight_with_bit then
     basics.describe_bench(
-        string.format('Utilities Benchmarks: popcount32_hamming_weight_with_bit %d random integers', N),
+        string.format('Utilities Benchmarks: popcount32_hamming_weight_with_bit %d random integers', #__random_integers),
         function()
             local s = 0
-            for i = 1, N do
+            for i = 1, #__random_integers do
                 s = s + __popcount32_hamming_weight_with_bit(__random_integers[i])
             end
             return s

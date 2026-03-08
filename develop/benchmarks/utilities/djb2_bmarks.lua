@@ -61,8 +61,7 @@ local function __djb2_unrolled(s)
     end
 
     while i <= l - 7 do
-        local c1, c2, c3, c4, c5, c6, c7, c8 =
-            __string_byte(s, i, i + 7)
+        local c1, c2, c3, c4, c5, c6, c7, c8 = __string_byte(s, i, i + 7)
 
         h = h * 33 + c1
         h = h * 33 + c2
@@ -159,8 +158,7 @@ local function __djb2_unrolled_batched(s)
     end
 
     while i <= l - 1 do
-        local c1, c2 =
-            __string_byte(s, i, i + 1)
+        local c1, c2 = __string_byte(s, i, i + 1)
 
         h = h * 33 ^ 2 + c1 * 33 + c2
         h = h % 2 ^ 32
@@ -193,7 +191,7 @@ local __random_strings = (function()
         strings[#strings + 1] = s
     end
 
-    for _ = 2, N do
+    for _ = 1, N - #strings do
         local s, l = '', __math_random(0, 32)
 
         for _ = 1, l do
@@ -206,7 +204,7 @@ local __random_strings = (function()
     return strings
 end)()
 
-for i = 1, N do
+for i = 1, #__random_strings do
     local s = __random_strings[i]
 
     assert(__djb2(s) == __djb2_unrolled(s))
@@ -214,30 +212,30 @@ for i = 1, N do
 end
 
 basics.describe_bench(
-    string.format('Utilities Benchmarks: djb2 %d random strings', N),
+    string.format('Utilities Benchmarks: djb2 %d random strings', #__random_strings),
     function()
         local s = 0
-        for i = 1, N do
+        for i = 1, #__random_strings do
             s = s + __djb2(__random_strings[i])
         end
         return s
     end)
 
 basics.describe_bench(
-    string.format('Utilities Benchmarks: djb2_unrolled %d random strings', N),
+    string.format('Utilities Benchmarks: djb2_unrolled %d random strings', #__random_strings),
     function()
         local s = 0
-        for i = 1, N do
+        for i = 1, #__random_strings do
             s = s + __djb2_unrolled(__random_strings[i])
         end
         return s
     end)
 
 basics.describe_bench(
-    string.format('Utilities Benchmarks: djb2_unrolled_batched %d random strings', N),
+    string.format('Utilities Benchmarks: djb2_unrolled_batched %d random strings', #__random_strings),
     function()
         local s = 0
-        for i = 1, N do
+        for i = 1, #__random_strings do
             s = s + __djb2_unrolled_batched(__random_strings[i])
         end
         return s
