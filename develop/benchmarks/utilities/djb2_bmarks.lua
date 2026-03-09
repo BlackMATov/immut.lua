@@ -2,7 +2,6 @@ local basics = require 'develop.basics'
 
 local N = 1000
 
-local __math_random = math.random
 local __string_byte = string.byte
 local __string_char = string.char
 
@@ -192,10 +191,10 @@ local __random_strings = (function()
     end
 
     for _ = 1, N - #strings do
-        local s, l = '', __math_random(0, 32)
+        local s, l = '', math.random(0, 32)
 
         for _ = 1, l do
-            s = s .. __string_char(__math_random(0, 255))
+            s = s .. __string_char(math.random(0, 255))
         end
 
         strings[#strings + 1] = s

@@ -2,8 +2,6 @@ local basics = require 'develop.basics'
 
 local N = 10000
 
-local __math_random = math.random
-
 local __bit = _G['bit'] or _G['bit32']
 ---@diagnostic disable-next-line: deprecated
 local __load_string = _G['loadstring'] or _G['load']
@@ -161,8 +159,8 @@ local __random_integers = (function()
     integers[#integers + 1] = 2 ^ 32 - 1
 
     for _ = 1, N - #integers do
-        local hi = __math_random(0, 2 ^ 16 - 1)
-        local lo = __math_random(0, 2 ^ 16 - 1)
+        local hi = math.random(0, 2 ^ 16 - 1)
+        local lo = math.random(0, 2 ^ 16 - 1)
 
         local v = hi * 2 ^ 16 + lo
 
