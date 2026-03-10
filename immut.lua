@@ -28,10 +28,12 @@ local immut = {
 }
 
 local __lua_error = error
+local __lua_tostring = tostring
 local __lua_type = type
 
 local __lua_string_byte = string.byte
 local __lua_string_format = string.format
+local __lua_table_concat = table.concat
 
 local __immut_num_hash
 local __immut_str_hash
@@ -170,7 +172,7 @@ local __empty_lists = {}
 function immut.list(mode)
     return __empty_lists[mode] or __lua_error(__lua_string_format(
         'invalid list mode: %s, expected one of: %s',
-        tostring(mode), table.concat(immut.AVAILABLE_LIST_MODES, ', ')))
+        __lua_tostring(mode), __lua_table_concat(immut.AVAILABLE_LIST_MODES, ', ')))
 end
 
 ---
@@ -194,7 +196,7 @@ local __empty_dicts = {}
 function immut.dict(mode)
     return __empty_dicts[mode] or __lua_error(__lua_string_format(
         'invalid dict mode: %s, expected one of: %s',
-        tostring(mode), table.concat(immut.AVAILABLE_DICT_MODES, ', ')))
+        __lua_tostring(mode), __lua_table_concat(immut.AVAILABLE_DICT_MODES, ', ')))
 end
 
 ---
@@ -390,6 +392,8 @@ local function __hamt_hash(key)
         return __immut_num_hash(key)
     elseif key_type == 'string' then
         return __immut_str_hash(key)
+    elseif key_type == 'boolean' then
+        return key and 0x93C467E3 or 0x7B5A4F1E
     else
         __lua_error(__lua_string_format('unsupported key type for hamt dict: %s', key_type))
     end
