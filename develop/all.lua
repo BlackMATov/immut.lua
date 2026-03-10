@@ -17,5 +17,7 @@ require 'develop.benchmarks.utilities.nummix_bmarks'
 print '----------------------------------------'
 require 'develop.benchmarks.utilities.popcount32_bmarks'
 print '----------------------------------------'
+require 'develop.benchmarks.utilities.pow2_bmarks'
+print '----------------------------------------'
 
 print 'All tests passed.'
