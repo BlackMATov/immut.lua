@@ -28,6 +28,7 @@ local immut = {
 }
 
 local __lua_error = error
+local __lua_setmetatable = setmetatable
 local __lua_tostring = tostring
 local __lua_type = type
 
@@ -38,9 +39,9 @@ local __lua_table_concat = table.concat
 local __immut_num_hash
 local __immut_str_hash
 
-local __immut_pow2_lut
-local __immut_popcount8_lut
-local __immut_popcount32_fun
+local __immut_pow2
+local __immut_popcount8
+local __immut_popcount32
 
 ---
 ---
@@ -208,11 +209,11 @@ end
 ---@class immut.copy_list : immut.list
 ---@field package __size integer
 ---@field package __elems any[]
-local __copy_list_mt = setmetatable({}, __list_mt)
+local __copy_list_mt = __lua_setmetatable({}, __list_mt)
 __copy_list_mt.__index = __copy_list_mt
 
 local function copy_list_new()
-    return setmetatable({ __size = 0, __elems = {} }, __copy_list_mt)
+    return __lua_setmetatable({ __size = 0, __elems = {} }, __copy_list_mt)
 end
 
 __empty_lists['copy'] = copy_list_new()
@@ -302,11 +303,11 @@ end
 ---@class immut.copy_dict : immut.dict
 ---@field package __size integer
 ---@field package __pairs table<any, any>
-local __copy_dict_mt = setmetatable({}, __dict_mt)
+local __copy_dict_mt = __lua_setmetatable({}, __dict_mt)
 __copy_dict_mt.__index = __copy_dict_mt
 
 local function copy_dict_new()
-    return setmetatable({ __size = 0, __pairs = {} }, __copy_dict_mt)
+    return __lua_setmetatable({ __size = 0, __pairs = {} }, __copy_dict_mt)
 end
 
 __empty_dicts['copy'] = copy_dict_new()
@@ -443,11 +444,11 @@ end
 ---@class immut.hamt_dict : immut.dict
 ---@field package __size integer
 ---@field package __root immut.hamt_node
-local __hamt_dict_mt = setmetatable({}, __dict_mt)
+local __hamt_dict_mt = __lua_setmetatable({}, __dict_mt)
 __hamt_dict_mt.__index = __hamt_dict_mt
 
 local function hamt_dict_new()
-    return setmetatable({ __size = 0, __root = nil }, __hamt_dict_mt)
+    return __lua_setmetatable({ __size = 0, __root = nil }, __hamt_dict_mt)
 end
 
 __empty_dicts['hamt'] = hamt_dict_new()
@@ -623,12 +624,12 @@ end
 
 ---
 ---
---- LOOKUP UTILITIES
+--- BITMAP UTILITIES
 ---
 ---
 
 ---@type integer[]
-__immut_pow2_lut = {
+__immut_pow2 = {
     1, 2, 4, 8, 16, 32, 64, 128,
     256, 512, 1024, 2048, 4096, 8192, 16384, 32768,
     65536, 131072, 262144, 524288, 1048576, 2097152, 4194304, 8388608,
@@ -636,7 +637,7 @@ __immut_pow2_lut = {
 }
 
 ---@type integer[]
-__immut_popcount8_lut = {
+__immut_popcount8 = {
     0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
     1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
     1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
@@ -650,8 +651,8 @@ __immut_popcount8_lut = {
 ---@param v integer
 ---@return integer
 ---@nodiscard
-function __immut_popcount32_fun(v)
-    local pc8 = __immut_popcount8_lut
+function __immut_popcount32(v)
+    local pc8 = __immut_popcount8
 
     local bb1 = v % 2 ^ 8; v = (v - bb1) / 2 ^ 8
     local bb2 = v % 2 ^ 8; v = (v - bb2) / 2 ^ 8
