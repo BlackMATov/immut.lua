@@ -431,8 +431,8 @@ local __HAMT_COLLISION_NODE_ENTRIES = 4
 ---@return integer
 ---@nodiscard
 local function __hamt_frag(hash, level)
-    local p = __immut_pow2[level]
-    return ((hash - hash % p) / p) % __HAMT_SIZE
+    local base = __immut_pow2[(level - 1) * __HAMT_BITS + 1]
+    return __immut_pow2[((hash - hash % base) / base) % __HAMT_SIZE + 1]
 end
 
 ---@param key immut.hamt_key
@@ -461,25 +461,19 @@ end
 ---@param node2 immut.hamt_node
 ---@return immut.hamt_node_bitmap
 ---@nodiscard
-local function __hamt_fork(level, hash1, node1, hash2, node2)
-    local pow2 = __immut_pow2
+local function __hamt_pack(level, hash1, node1, hash2, node2)
+    local hash1_frag = __hamt_frag(hash1, level)
+    local hash2_frag = __hamt_frag(hash2, level)
 
-    local frag1 = __hamt_frag(hash1, level)
-    local frag2 = __hamt_frag(hash2, level)
-
-    if frag1 == frag2 then
-        local frag_bit = pow2[frag1 + 1]
-        local new_node = __hamt_fork(level + __HAMT_BITS, hash1, node1, hash2, node2)
-        return { __HAMT_BITMAP, 1, frag_bit, new_node }
+    if hash1_frag == hash2_frag then
+        local new_node = __hamt_pack(level + 1, hash1, node1, hash2, node2)
+        return { __HAMT_BITMAP, 1, hash1_frag, new_node }
     end
 
-    local frag1_bit = pow2[frag1 + 1]
-    local frag2_bit = pow2[frag2 + 1]
-
-    if frag1 < frag2 then
-        return { __HAMT_BITMAP, 2, frag1_bit + frag2_bit, node1, node2 }
+    if hash1_frag < hash2_frag then
+        return { __HAMT_BITMAP, 2, hash1_frag + hash2_frag, node1, node2 }
     else
-        return { __HAMT_BITMAP, 2, frag1_bit + frag2_bit, node2, node1 }
+        return { __HAMT_BITMAP, 2, hash1_frag + hash2_frag, node2, node1 }
     end
 end
 
@@ -516,10 +510,9 @@ local function __hamt_assoc(node, level, key, hash, value)
             return { __HAMT_COLLISION, hash, 2, node_key, node_value, key, value }, 1
         else
             local new_node = { __HAMT_LEAF, key, hash, value }
-            return __hamt_fork(level, node_hash, node, hash, new_node), 1
+            return __hamt_pack(level, node_hash, node, hash, new_node), 1
         end
     elseif node_type == __HAMT_BITMAP then
-        local pow2 = __immut_pow2
         local pc32 = __immut_popcount32
 
         ---@type integer
@@ -531,14 +524,13 @@ local function __hamt_assoc(node, level, key, hash, value)
         local fst_child = __HAMT_BITMAP_NODE_CHILDREN
         local lst_child = __HAMT_BITMAP_NODE_CHILDREN + node_arity - 1
 
-        local frag = __hamt_frag(hash, level)
-        local frag_bit = pow2[frag + 1]
+        local hash_frag = __hamt_frag(hash, level)
 
-        if node_bitmap % (frag_bit + frag_bit) < frag_bit then
-            local bit_child = pc32(node_bitmap % frag_bit) + fst_child
+        if node_bitmap % (hash_frag + hash_frag) < hash_frag then
+            local bit_child = pc32(node_bitmap % hash_frag) + fst_child
 
             ---@type immut.hamt_node_bitmap
-            local new_node = { __HAMT_BITMAP, node_arity + 1, node_bitmap + frag_bit }
+            local new_node = { __HAMT_BITMAP, node_arity + 1, node_bitmap + hash_frag }
 
             for i = fst_child, bit_child - 1 do new_node[i] = node[i] end
             new_node[bit_child] = { __HAMT_LEAF, key, hash, value }
@@ -546,11 +538,11 @@ local function __hamt_assoc(node, level, key, hash, value)
 
             return new_node, 1
         else
-            local bit_child = pc32(node_bitmap % frag_bit) + fst_child
+            local bit_child = pc32(node_bitmap % hash_frag) + fst_child
             local bit_child_node = node[bit_child]
 
             local new_child_node, size_delta = __hamt_assoc(
-                bit_child_node, level + __HAMT_BITS, key, hash, value)
+                bit_child_node, level + 1, key, hash, value)
 
             if new_child_node == bit_child_node then
                 return node, 0
@@ -571,7 +563,7 @@ local function __hamt_assoc(node, level, key, hash, value)
 
         if node_hash ~= hash then
             local new_node = { __HAMT_LEAF, key, hash, value }
-            return __hamt_fork(level, node_hash, node, hash, new_node), 1
+            return __hamt_pack(level, node_hash, node, hash, new_node), 1
         end
 
         local fst_entry = __HAMT_COLLISION_NODE_ENTRIES
@@ -650,7 +642,6 @@ local function __hamt_dissoc(node, level, key, hash)
 
         return node, 0
     elseif node_type == __HAMT_BITMAP then
-        local pow2 = __immut_pow2
         local pc32 = __immut_popcount32
 
         ---@type integer
@@ -662,17 +653,16 @@ local function __hamt_dissoc(node, level, key, hash)
         local fst_child = __HAMT_BITMAP_NODE_CHILDREN
         local lst_child = __HAMT_BITMAP_NODE_CHILDREN + node_arity - 1
 
-        local frag = __hamt_frag(hash, level)
-        local frag_bit = pow2[frag + 1]
+        local hash_frag = __hamt_frag(hash, level)
 
-        if node_bitmap % (frag_bit + frag_bit) < frag_bit then
+        if node_bitmap % (hash_frag + hash_frag) < hash_frag then
             return node, 0
         else
-            local bit_child = pc32(node_bitmap % frag_bit) + fst_child
+            local bit_child = pc32(node_bitmap % hash_frag) + fst_child
             local bit_child_node = node[bit_child]
 
             local new_child_node, size_delta = __hamt_dissoc(
-                bit_child_node, level + __HAMT_BITS, key, hash)
+                bit_child_node, level + 1, key, hash)
 
             if new_child_node == bit_child_node then
                 return node, 0
@@ -712,7 +702,7 @@ local function __hamt_dissoc(node, level, key, hash)
                 end
 
                 ---@type immut.hamt_node_bitmap
-                local new_node = { __HAMT_BITMAP, node_arity - 1, node_bitmap - frag_bit }
+                local new_node = { __HAMT_BITMAP, node_arity - 1, node_bitmap - hash_frag }
 
                 for i = fst_child, bit_child - 1 do new_node[i] = node[i] end
                 for i = bit_child + 1, lst_child do new_node[i - 1] = node[i] end
@@ -772,7 +762,6 @@ end
 ---@return immut.hamt_value value
 ---@nodiscard
 local function __hamt_lookup(node, level, key, hash)
-    local pow2 = __immut_pow2
     local pc32 = __immut_popcount32
 
     while node ~= nil do
@@ -787,18 +776,17 @@ local function __hamt_lookup(node, level, key, hash)
         elseif node_type == __HAMT_BITMAP then
             local node_bitmap = node[__HAMT_BITMAP_NODE_BITMAP]
 
-            local frag = __hamt_frag(hash, level)
-            local frag_bit = pow2[frag + 1]
+            local hash_frag = __hamt_frag(hash, level)
 
-            if node_bitmap % (frag_bit + frag_bit) < frag_bit then
+            if node_bitmap % (hash_frag + hash_frag) < hash_frag then
                 return nil
             end
 
             local fst_child = __HAMT_BITMAP_NODE_CHILDREN
-            local bit_child = pc32(node_bitmap % frag_bit) + fst_child
+            local bit_child = pc32(node_bitmap % hash_frag) + fst_child
 
             node = node[bit_child]
-            level = level + __HAMT_BITS
+            level = level + 1
         elseif node_type == __HAMT_COLLISION then
             local node_hash = node[__HAMT_COLLISION_NODE_HASH]
             if node_hash ~= hash then return nil end
