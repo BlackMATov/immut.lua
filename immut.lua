@@ -596,8 +596,8 @@ local function __hamt_collision_node(hash, arity)
         node = __opt_table_new(3 + 2 * arity)
         node[1], node[2], node[3] = __HAMT_COLLISION, hash, arity
     else
-        if arity <= 8 then
-            if arity <= 4 then
+        if arity <= 4 then
+            if arity <= 2 then
                 node = { __HAMT_COLLISION, hash, arity,
                     0, 0, 0, 0,
                 }
@@ -608,7 +608,7 @@ local function __hamt_collision_node(hash, arity)
                 }
             end
         else
-            if arity <= 12 then
+            if arity <= 6 then
                 node = { __HAMT_COLLISION, hash, arity,
                     0, 0, 0, 0,
                     0, 0, 0, 0,
