@@ -492,9 +492,6 @@ end
 ---@return integer size_delta
 ---@nodiscard
 local function __hamt_assoc(node, level, key, hash, value)
-    local pow2 = __immut_pow2
-    local pc32 = __immut_popcount32
-
     if node == nil then
         return { __HAMT_LEAF, key, hash, value }, 1
     end
@@ -522,6 +519,9 @@ local function __hamt_assoc(node, level, key, hash, value)
             return __hamt_fork(level, node_hash, node, hash, new_node), 1
         end
     elseif node_type == __HAMT_BITMAP then
+        local pow2 = __immut_pow2
+        local pc32 = __immut_popcount32
+
         ---@type integer
         local node_arity = node[__HAMT_BITMAP_NODE_ARITY]
 
@@ -634,9 +634,6 @@ end
 ---@return integer size_delta
 ---@nodiscard
 local function __hamt_dissoc(node, level, key, hash)
-    local pow2 = __immut_pow2
-    local pc32 = __immut_popcount32
-
     if node == nil then
         return nil, 0
     end
@@ -653,6 +650,9 @@ local function __hamt_dissoc(node, level, key, hash)
 
         return node, 0
     elseif node_type == __HAMT_BITMAP then
+        local pow2 = __immut_pow2
+        local pc32 = __immut_popcount32
+
         ---@type integer
         local node_arity = node[__HAMT_BITMAP_NODE_ARITY]
 
@@ -679,8 +679,12 @@ local function __hamt_dissoc(node, level, key, hash)
             end
 
             if new_child_node then
-                if node_arity == 1 and new_child_node[1] == __HAMT_LEAF then
-                    return new_child_node, size_delta
+                if node_arity == 1 then
+                    local new_child_node_type = new_child_node[1]
+
+                    if new_child_node_type == __HAMT_LEAF or new_child_node_type == __HAMT_COLLISION then
+                        return new_child_node, size_delta
+                    end
                 end
 
                 ---@type immut.hamt_node_bitmap
@@ -698,9 +702,11 @@ local function __hamt_dissoc(node, level, key, hash)
 
                 if node_arity == 2 then
                     local rem_i = bit_child == fst_child and lst_child or fst_child
-                    local rem_node = node[rem_i]
 
-                    if rem_node[1] == __HAMT_LEAF then
+                    local rem_node = node[rem_i]
+                    local rem_node_type = rem_node[1]
+
+                    if rem_node_type == __HAMT_LEAF or rem_node_type == __HAMT_COLLISION then
                         return rem_node, size_delta
                     end
                 end
@@ -800,7 +806,7 @@ local function __hamt_lookup(node, level, key, hash)
             local node_arity = node[__HAMT_COLLISION_NODE_ARITY]
 
             local fst_entry = __HAMT_COLLISION_NODE_ENTRIES
-            local lst_entry = __HAMT_COLLISION_NODE_ENTRIES + 2 * node_arity - 1
+            local lst_entry = __HAMT_COLLISION_NODE_ENTRIES + 2 * node_arity - 2
 
             for i = fst_entry, lst_entry, 2 do
                 local entry_key = node[i]
