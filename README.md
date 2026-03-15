@@ -23,8 +23,8 @@
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Cheat Sheet](#cheat-sheet)
-  - [Map](#map)
-  - [Set](#set)
+  - [List](#list)
+  - [Dict](#dict)
 - [Changelog](#changelog)
 - [License](#license)
 
@@ -44,42 +44,54 @@ luarocks install immut.lua
 
 ## Quick Start
 
-> Comming soon...
+> Coming soon...
 
 ## Cheat Sheet
 
-### Map
-
 ```
-map :: map_mt
+list_mode :: 'copy' | 'isll'
+AVAILABLE_LIST_MODES :: list_mode[]
 
-map_mt:size -> integer
-map_mt:empty -> boolean
-
-map_mt:insert :: any, any -> map_mt
-map_mt:remove :: any -> map_mt
-
-map_mt:get :: any -> any
-map_mt:has :: any -> boolean
+dict_mode :: 'copy' | 'hamt' | 'tree'
+AVAILABLE_DICT_MODES :: dict_mode[]
 ```
 
-### Set
+### List
 
 ```
-set :: set_mt
+list :: list_mode -> list_mt
 
-set_mt:size -> integer
-set_mt:empty -> boolean
+list_mt:size -> integer
+list_mt:empty -> boolean
 
-set_mt:insert :: any -> set_mt
-set_mt:remove :: any -> set_mt
+list_mt:head -> any
+list_mt:last -> any
 
-set_mt:has :: any -> boolean
+list_mt:tail -> list_mt
+list_mt:init -> list_mt
+
+list_mt:cons :: any -> list_mt
+list_mt:snoc :: any -> list_mt
+```
+
+### Dict
+
+```
+dict :: dict_mode -> dict_mt
+
+dict_mt:size -> integer
+dict_mt:empty -> boolean
+
+dict_mt:assoc :: any, any -> dict_mt
+dict_mt:dissoc :: any -> dict_mt
+
+dict_mt:lookup :: any -> any
+dict_mt:contains :: any -> boolean
 ```
 
 ## Changelog
 
-> Comming soon...
+> Coming soon...
 
 ## License
 

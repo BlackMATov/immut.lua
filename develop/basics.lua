@@ -29,10 +29,39 @@ function basics.unload(pattern)
     end
 end
 
+function basics.describe_test(modname)
+    print(string.format('| %s ... |', modname))
+
+    collectgarbage('collect')
+    collectgarbage('stop')
+
+    do
+        local start_s = os.clock()
+        local start_kb = collectgarbage('count')
+
+        local success, result = xpcall(function()
+            basics.unload(modname)
+            require(modname)
+        end, debug.traceback)
+
+        local finish_s = os.clock()
+        local finish_kb = collectgarbage('count')
+
+        if success then
+            print(string.format('|-- PASS | us: %.2f | kb: %.2f',
+                (finish_s - start_s) * 1e6,
+                finish_kb - start_kb))
+        else
+            error('|-- TEST FAIL: ' .. result)
+        end
+    end
+
+    collectgarbage('restart')
+    collectgarbage('collect')
+end
+
 ---@param modname string
 function basics.describe_fuzz(modname)
-    basics.unload('immut')
-
     print(string.format('| %s ... |', modname))
 
     collectgarbage('collect')
@@ -44,13 +73,13 @@ function basics.describe_fuzz(modname)
         local start_s = os.clock()
         local start_kb = collectgarbage('count')
 
-        local success, result = pcall(function()
+        local success, result = xpcall(function()
             repeat
                 iters = iters + 1
                 basics.unload(modname)
                 require(modname)
             until iters >= MIN_FUZZ_ITERS and os.clock() - start_s >= MIN_FUZZ_SECS
-        end)
+        end, debug.traceback)
 
         local finish_s = os.clock()
         local finish_kb = collectgarbage('count')
@@ -62,7 +91,7 @@ function basics.describe_fuzz(modname)
                 (finish_kb - start_kb) / iters,
                 iters))
         else
-            print('|-- FUZZ FAIL: ' .. result)
+            error('|-- FUZZ FAIL: ' .. result)
         end
     end
 
@@ -75,8 +104,6 @@ end
 ---@param init? fun(): ...
 ---@param fini? fun(...): ...
 function basics.describe_bench(name, loop, init, fini)
-    basics.unload('immut')
-
     print(string.format('| %s ... |', name))
 
     local state = init and __table_pack(init()) or {}
@@ -86,16 +113,15 @@ function basics.describe_bench(name, loop, init, fini)
 
         local warmup_s = os.clock()
 
-        local success, result = pcall(function()
+        local success, result = xpcall(function()
             repeat
                 iters = iters + 1
                 loop(__table_unpack(state))
             until iters >= MIN_WARMUP_ITERS and os.clock() - warmup_s > MIN_WARMUP_SECS
-        end)
+        end, debug.traceback)
 
         if not success then
-            print('|-- WARMUP FAIL: ' .. result)
-            return
+            error('|-- WARMUP FAIL: ' .. result)
         end
     end
 
@@ -108,12 +134,12 @@ function basics.describe_bench(name, loop, init, fini)
         local start_s = os.clock()
         local start_kb = collectgarbage('count')
 
-        local success, result = pcall(function()
+        local success, result = xpcall(function()
             repeat
                 iters = iters + 1
                 loop(__table_unpack(state))
             until iters >= MIN_BENCH_ITERS and os.clock() - start_s > MIN_BENCH_SECS
-        end)
+        end, debug.traceback)
 
         local finish_s = os.clock()
         local finish_kb = collectgarbage('count')
@@ -125,17 +151,17 @@ function basics.describe_bench(name, loop, init, fini)
                 (finish_kb - start_kb) / iters,
                 iters))
         else
-            print('|-- LOOP FAIL: ' .. result)
+            error('|-- LOOP FAIL: ' .. result)
         end
     end
 
     if fini then
-        local success, result = pcall(function()
+        local success, result = xpcall(function()
             fini(__table_unpack(state))
-        end)
+        end, debug.traceback)
 
         if not success then
-            print('|-- FINI FAIL: ' .. result)
+            error('|-- FINI FAIL: ' .. result)
         end
     end
 
