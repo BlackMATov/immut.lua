@@ -322,6 +322,14 @@ function __copy_dict_mt:empty()
 end
 
 function __copy_dict_mt:assoc(key, value)
+    if key == nil then
+        __lua_error('copy dict does not support nil keys')
+    end
+
+    if value == nil then
+        __lua_error('copy dict does not support nil values')
+    end
+
     local self_value = self.__pairs[key]
 
     if self_value == value then
@@ -341,6 +349,10 @@ function __copy_dict_mt:assoc(key, value)
 end
 
 function __copy_dict_mt:dissoc(key)
+    if key == nil then
+        __lua_error('copy dict does not support nil keys')
+    end
+
     local self_value = self.__pairs[key]
 
     if self_value == nil then
@@ -360,10 +372,18 @@ function __copy_dict_mt:dissoc(key)
 end
 
 function __copy_dict_mt:lookup(key)
+    if key == nil then
+        __lua_error('copy dict does not support nil keys')
+    end
+
     return self.__pairs[key]
 end
 
 function __copy_dict_mt:contains(key)
+    if key == nil then
+        __lua_error('copy dict does not support nil keys')
+    end
+
     return self.__pairs[key] ~= nil
 end
 
@@ -824,6 +844,14 @@ function __hamt_dict_mt:empty()
 end
 
 function __hamt_dict_mt:assoc(key, value)
+    if key == nil then
+        __lua_error('hamt dict does not support nil keys')
+    end
+
+    if value == nil then
+        __lua_error('hamt dict does not support nil values')
+    end
+
     local root, hash = self.__root, __hamt_hash(key)
 
     local new_root, size_delta = __hamt_assoc(root, 1, key, hash, value)
@@ -836,6 +864,10 @@ function __hamt_dict_mt:assoc(key, value)
 end
 
 function __hamt_dict_mt:dissoc(key)
+    if key == nil then
+        __lua_error('hamt dict does not support nil keys')
+    end
+
     local root, hash = self.__root, __hamt_hash(key)
 
     local new_root, size_delta = __hamt_dissoc(root, 1, key, hash)
@@ -848,10 +880,18 @@ function __hamt_dict_mt:dissoc(key)
 end
 
 function __hamt_dict_mt:lookup(key)
+    if key == nil then
+        __lua_error('hamt dict does not support nil keys')
+    end
+
     return __hamt_lookup(self.__root, 1, key, __hamt_hash(key))
 end
 
 function __hamt_dict_mt:contains(key)
+    if key == nil then
+        __lua_error('hamt dict does not support nil keys')
+    end
+
     return __hamt_lookup(self.__root, 1, key, __hamt_hash(key)) ~= nil
 end
 
