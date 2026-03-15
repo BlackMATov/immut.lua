@@ -45,6 +45,69 @@ local __immut_popcount32
 
 ---
 ---
+--- LUA EXTENSIONS
+---
+---
+
+---@type fun(nseq?: integer): table
+local __opt_table_new = (function()
+    -- https://luajit.org/extensions.html
+    -- https://www.lua.org/manual/5.5/manual.html#pdf-table.create
+    -- https://create.roblox.com/docs/reference/engine/libraries/table#create
+    -- https://forum.defold.com/t/solved-is-luajit-table-new-function-available-in-defold/78623
+
+    do
+        ---@diagnostic disable-next-line: deprecated, undefined-field
+        local table_new = table and table.new
+        if table_new then return function(nseq) return table_new(nseq or 0, 0) end end
+    end
+
+    do
+        ---@diagnostic disable-next-line: deprecated, undefined-field
+        local table_create = table and table.create
+        if table_create then return function(nseq) return table_create(nseq or 0) end end
+    end
+
+    if package and package.loaded then
+        local loaded_table_create = package.loaded.table and package.loaded.table.create
+        if loaded_table_create then return function(nseq) return loaded_table_create(nseq or 0) end end
+    end
+
+    if package and package.preload then
+        local table_new_loader = package.preload['table.new']
+        local table_new = table_new_loader and table_new_loader()
+        if table_new then return function(nseq) return table_new(nseq or 0, 0) end end
+    end
+end)()
+
+---@type fun(a1: table, f: integer, e: integer, t: integer, a2?: table): table
+local __opt_table_move = (function()
+    -- https://luajit.org/extensions.html
+    -- https://www.lua.org/manual/5.3/manual.html#pdf-table.move
+    -- https://create.roblox.com/docs/reference/engine/libraries/table#move
+    -- https://forum.defold.com/t/solved-is-luajit-table-new-function-available-in-defold/78623
+    -- https://github.com/LuaJIT/LuaJIT/blob/v2.1/src/lib_table.c#L132
+
+    do
+        ---@diagnostic disable-next-line: deprecated, undefined-field
+        local table_move = table and table.move
+        if table_move then return table_move end
+    end
+
+    if package and package.loaded then
+        local loaded_table_move = package.loaded.table and package.loaded.table.move
+        if loaded_table_move then return loaded_table_move end
+    end
+
+    if package and package.preload then
+        local table_move_loader = package.preload['table.move']
+        local table_move = table_move_loader and table_move_loader()
+        if table_move then return table_move end
+    end
+end)()
+
+---
+---
 --- LIST API
 ---
 ---
@@ -461,12 +524,12 @@ end
 ---@param node2 immut.hamt_node
 ---@return immut.hamt_node_bitmap
 ---@nodiscard
-local function __hamt_pack(level, hash1, node1, hash2, node2)
+local function __hamt_bitmap_pack(level, hash1, node1, hash2, node2)
     local hash1_frag = __hamt_frag(hash1, level)
     local hash2_frag = __hamt_frag(hash2, level)
 
     if hash1_frag == hash2_frag then
-        local new_node = __hamt_pack(level + 1, hash1, node1, hash2, node2)
+        local new_node = __hamt_bitmap_pack(level + 1, hash1, node1, hash2, node2)
         return { __HAMT_BITMAP, 1, hash1_frag, new_node }
     end
 
@@ -475,6 +538,94 @@ local function __hamt_pack(level, hash1, node1, hash2, node2)
     else
         return { __HAMT_BITMAP, 2, hash1_frag + hash2_frag, node2, node1 }
     end
+end
+
+---@param arity integer
+---@param bitmap integer
+---@return immut.hamt_node_bitmap
+---@nodiscard
+local function __hamt_bitmap_node(arity, bitmap)
+    ---@type immut.hamt_node_bitmap
+    local node
+
+    if __opt_table_new then
+        node = __opt_table_new(3 + arity)
+        node[1], node[2], node[3] = __HAMT_BITMAP, arity, bitmap
+    else
+        if arity <= 16 then
+            if arity <= 8 then
+                node = { __HAMT_BITMAP, arity, bitmap,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                }
+            else
+                node = { __HAMT_BITMAP, arity, bitmap,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                }
+            end
+        else
+            if arity <= 24 then
+                node = { __HAMT_BITMAP, arity, bitmap,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                }
+            else
+                node = { __HAMT_BITMAP, arity, bitmap,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                }
+            end
+        end
+    end
+
+    return node
+end
+
+---@param hash immut.hamt_hash
+---@param arity integer
+---@return immut.hamt_node_collision
+---@nodiscard
+local function __hamt_collision_node(hash, arity)
+    ---@type immut.hamt_node_collision
+    local node
+
+    if __opt_table_new then
+        node = __opt_table_new(3 + 2 * arity)
+        node[1], node[2], node[3] = __HAMT_COLLISION, hash, arity
+    else
+        if arity <= 4 then
+            if arity <= 2 then
+                node = { __HAMT_COLLISION, hash, arity,
+                    0, 0, 0, 0,
+                }
+            else
+                node = { __HAMT_COLLISION, hash, arity,
+                    0, 0, 0, 0,
+                    0, 0, 0, 0,
+                }
+            end
+        else
+            if arity <= 6 then
+                node = { __HAMT_COLLISION, hash, arity,
+                    0, 0, 0, 0,
+                    0, 0, 0, 0,
+                    0, 0, 0, 0,
+                }
+            else
+                node = { __HAMT_COLLISION, hash, arity,
+                    0, 0, 0, 0,
+                    0, 0, 0, 0,
+                    0, 0, 0, 0,
+                    0, 0, 0, 0,
+                }
+            end
+        end
+    end
+
+    return node
 end
 
 ---@param node immut.hamt_node
@@ -510,7 +661,7 @@ local function __hamt_assoc(node, level, key, hash, value)
             return { __HAMT_COLLISION, hash, 2, node_key, node_value, key, value }, 1
         else
             local new_node = { __HAMT_LEAF, key, hash, value }
-            return __hamt_pack(level, node_hash, node, hash, new_node), 1
+            return __hamt_bitmap_pack(level, node_hash, node, hash, new_node), 1
         end
     elseif node_type == __HAMT_BITMAP then
         local pc32 = __immut_popcount32
@@ -529,12 +680,17 @@ local function __hamt_assoc(node, level, key, hash, value)
         if node_bitmap % (hash_frag + hash_frag) < hash_frag then
             local bit_child = pc32(node_bitmap % hash_frag) + fst_child
 
-            ---@type immut.hamt_node_bitmap
-            local new_node = { __HAMT_BITMAP, node_arity + 1, node_bitmap + hash_frag }
+            local new_node = __hamt_bitmap_node(node_arity + 1, node_bitmap + hash_frag)
 
-            for i = fst_child, bit_child - 1 do new_node[i] = node[i] end
-            new_node[bit_child] = { __HAMT_LEAF, key, hash, value }
-            for i = bit_child, lst_child do new_node[i + 1] = node[i] end
+            if __opt_table_move then
+                __opt_table_move(node, fst_child, bit_child - 1, fst_child, new_node)
+                new_node[bit_child] = { __HAMT_LEAF, key, hash, value }
+                __opt_table_move(node, bit_child, lst_child, bit_child + 1, new_node)
+            else
+                for i = fst_child, bit_child - 1 do new_node[i] = node[i] end
+                new_node[bit_child] = { __HAMT_LEAF, key, hash, value }
+                for i = bit_child, lst_child do new_node[i + 1] = node[i] end
+            end
 
             return new_node, 1
         else
@@ -548,12 +704,15 @@ local function __hamt_assoc(node, level, key, hash, value)
                 return node, 0
             end
 
-            ---@type immut.hamt_node_bitmap
-            local new_node = { __HAMT_BITMAP, node_arity, node_bitmap }
+            local new_node = __hamt_bitmap_node(node_arity, node_bitmap)
 
-            for i = fst_child, bit_child - 1 do new_node[i] = node[i] end
-            new_node[bit_child] = new_child_node
-            for i = bit_child + 1, lst_child do new_node[i] = node[i] end
+            if __opt_table_move then
+                __opt_table_move(node, fst_child, lst_child, fst_child, new_node)
+                new_node[bit_child] = new_child_node
+            else
+                for i = fst_child, lst_child do new_node[i] = node[i] end
+                new_node[bit_child] = new_child_node
+            end
 
             return new_node, size_delta
         end
@@ -563,7 +722,7 @@ local function __hamt_assoc(node, level, key, hash, value)
 
         if node_hash ~= hash then
             local new_node = { __HAMT_LEAF, key, hash, value }
-            return __hamt_pack(level, node_hash, node, hash, new_node), 1
+            return __hamt_bitmap_pack(level, node_hash, node, hash, new_node), 1
         end
 
         local fst_entry = __HAMT_COLLISION_NODE_ENTRIES
@@ -579,36 +738,31 @@ local function __hamt_assoc(node, level, key, hash, value)
                     return node, 0
                 end
 
-                ---@type immut.hamt_node_collision
-                local new_node = { __HAMT_COLLISION, node_hash, node_arity }
+                local new_node = __hamt_collision_node(node_hash, node_arity)
 
-                for j = fst_entry, i - 2, 2 do
-                    new_node[j] = node[j]
-                    new_node[j + 1] = node[j + 1]
-                end
-
-                new_node[i] = key
-                new_node[i + 1] = value
-
-                for j = i + 2, lst_entry, 2 do
-                    new_node[j] = node[j]
-                    new_node[j + 1] = node[j + 1]
+                if __opt_table_move then
+                    __opt_table_move(node, fst_entry, i - 1, fst_entry, new_node)
+                    new_node[i], new_node[i + 1] = key, value
+                    __opt_table_move(node, i + 2, lst_entry + 1, i + 2, new_node)
+                else
+                    for j = fst_entry, i - 1 do new_node[j] = node[j] end
+                    new_node[i], new_node[i + 1] = key, value
+                    for j = i + 2, lst_entry + 1 do new_node[j] = node[j] end
                 end
 
                 return new_node, 0
             end
         end
 
-        ---@type immut.hamt_node_collision
-        local new_node = { __HAMT_COLLISION, node_hash, node_arity + 1 }
+        local new_node = __hamt_collision_node(node_hash, node_arity + 1)
 
-        for j = fst_entry, lst_entry, 2 do
-            new_node[j] = node[j]
-            new_node[j + 1] = node[j + 1]
+        if __opt_table_move then
+            __opt_table_move(node, fst_entry, lst_entry + 1, fst_entry, new_node)
+            new_node[lst_entry + 2], new_node[lst_entry + 3] = key, value
+        else
+            for j = fst_entry, lst_entry + 1 do new_node[j] = node[j] end
+            new_node[lst_entry + 2], new_node[lst_entry + 3] = key, value
         end
-
-        new_node[lst_entry + 2] = key
-        new_node[lst_entry + 3] = value
 
         return new_node, 1
     end
@@ -672,17 +826,20 @@ local function __hamt_dissoc(node, level, key, hash)
                 if node_arity == 1 then
                     local new_child_node_type = new_child_node[1]
 
-                    if new_child_node_type == __HAMT_LEAF or new_child_node_type == __HAMT_COLLISION then
+                    if new_child_node_type ~= __HAMT_BITMAP then
                         return new_child_node, size_delta
                     end
                 end
 
-                ---@type immut.hamt_node_bitmap
-                local new_node = { __HAMT_BITMAP, node_arity, node_bitmap }
+                local new_node = __hamt_bitmap_node(node_arity, node_bitmap)
 
-                for i = fst_child, bit_child - 1 do new_node[i] = node[i] end
-                new_node[bit_child] = new_child_node
-                for i = bit_child + 1, lst_child do new_node[i] = node[i] end
+                if __opt_table_move then
+                    __opt_table_move(node, fst_child, lst_child, fst_child, new_node)
+                    new_node[bit_child] = new_child_node
+                else
+                    for i = fst_child, lst_child do new_node[i] = node[i] end
+                    new_node[bit_child] = new_child_node
+                end
 
                 return new_node, size_delta
             else
@@ -696,16 +853,20 @@ local function __hamt_dissoc(node, level, key, hash)
                     local rem_node = node[rem_i]
                     local rem_node_type = rem_node[1]
 
-                    if rem_node_type == __HAMT_LEAF or rem_node_type == __HAMT_COLLISION then
+                    if rem_node_type ~= __HAMT_BITMAP then
                         return rem_node, size_delta
                     end
                 end
 
-                ---@type immut.hamt_node_bitmap
-                local new_node = { __HAMT_BITMAP, node_arity - 1, node_bitmap - hash_frag }
+                local new_node = __hamt_bitmap_node(node_arity - 1, node_bitmap - hash_frag)
 
-                for i = fst_child, bit_child - 1 do new_node[i] = node[i] end
-                for i = bit_child + 1, lst_child do new_node[i - 1] = node[i] end
+                if __opt_table_move then
+                    __opt_table_move(node, fst_child, bit_child - 1, fst_child, new_node)
+                    __opt_table_move(node, bit_child + 1, lst_child, bit_child, new_node)
+                else
+                    for i = fst_child, bit_child - 1 do new_node[i] = node[i] end
+                    for i = bit_child + 1, lst_child do new_node[i - 1] = node[i] end
+                end
 
                 return new_node, size_delta
             end
@@ -730,17 +891,14 @@ local function __hamt_dissoc(node, level, key, hash)
                     return { __HAMT_LEAF, node[rem_i], node_hash, node[rem_i + 1] }, -1
                 end
 
-                ---@type immut.hamt_node_collision
-                local new_node = { __HAMT_COLLISION, node_hash, node_arity - 1 }
+                local new_node = __hamt_collision_node(node_hash, node_arity - 1)
 
-                for j = fst_entry, i - 2, 2 do
-                    new_node[j] = node[j]
-                    new_node[j + 1] = node[j + 1]
-                end
-
-                for j = i + 2, lst_entry, 2 do
-                    new_node[j - 2] = node[j]
-                    new_node[j - 1] = node[j + 1]
+                if __opt_table_move then
+                    __opt_table_move(node, fst_entry, i - 1, fst_entry, new_node)
+                    __opt_table_move(node, i + 2, lst_entry + 1, i, new_node)
+                else
+                    for j = fst_entry, i - 1 do new_node[j] = node[j] end
+                    for j = i + 2, lst_entry + 1 do new_node[j - 2] = node[j] end
                 end
 
                 return new_node, -1
