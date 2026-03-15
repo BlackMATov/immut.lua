@@ -377,15 +377,47 @@ end
 ---@alias immut.hamt_hash integer
 ---@alias immut.hamt_value any
 
----@class immut.hamt_node
+---@alias immut.hamt_node table<any, any>
+---@alias immut.hamt_node_leaf immut.hamt_node
+---@alias immut.hamt_node_bitmap immut.hamt_node
+---@alias immut.hamt_node_collision immut.hamt_node
 
----@class immut.hamt_node_leaf : immut.hamt_node
+-- HAMT Constants
+local __HAMT_BITS = 5
+local __HAMT_SIZE = 2 ^ __HAMT_BITS
 
----@class immut.hamt_node_bitmap : immut.hamt_node
+-- HAMT Node Types
+local __HAMT_LEAF = 1
+local __HAMT_BITMAP = 2
+local __HAMT_COLLISION = 3
 
----@class immut.hamt_node_collision : immut.hamt_node
+-- HAMT Leaf Node Layout: {LEAF, key, hash, value}
+local __HAMT_LEAF_NODE_KEY = 2
+local __HAMT_LEAF_NODE_HASH = 3
+local __HAMT_LEAF_NODE_VALUE = 4
 
----@diagnostic disable-next-line: unused-local
+-- HAMT Bitmap Node Layout: {BITMAP, arity, bitmap, child1, child2, ...}
+local __HAMT_BITMAP_NODE_ARITY = 2
+local __HAMT_BITMAP_NODE_BITMAP = 3
+local __HAMT_BITMAP_NODE_CHILDREN = 4
+
+-- HAMT Collision Node Layout: {COLLISION, hash, arity, key1, value1, key2, value2, ...}
+local __HAMT_COLLISION_NODE_HASH = 2
+local __HAMT_COLLISION_NODE_ARITY = 3
+local __HAMT_COLLISION_NODE_ENTRIES = 4
+
+---@param hash immut.hamt_hash
+---@param level integer
+---@return integer
+---@nodiscard
+local function __hamt_frag(hash, level)
+    local p = __immut_pow2[level]
+    return ((hash - hash % p) / p) % __HAMT_SIZE
+end
+
+---@param key immut.hamt_key
+---@return immut.hamt_hash
+---@nodiscard
 local function __hamt_hash(key)
     local key_type = __lua_type(key)
 
@@ -396,43 +428,372 @@ local function __hamt_hash(key)
     elseif key_type == 'boolean' then
         return key and 0x93C467E3 or 0x7B5A4F1E
     else
-        __lua_error(__lua_string_format('unsupported key type for hamt dict: %s', key_type))
+        __lua_error(__lua_string_format(
+            'unsupported key type for hamt dict: %s',
+            key_type))
+    end
+end
+
+---@param level integer
+---@param hash1 immut.hamt_hash
+---@param node1 immut.hamt_node
+---@param hash2 immut.hamt_hash
+---@param node2 immut.hamt_node
+---@return immut.hamt_node_bitmap
+---@nodiscard
+local function __hamt_fork(level, hash1, node1, hash2, node2)
+    local pow2 = __immut_pow2
+
+    local frag1 = __hamt_frag(hash1, level)
+    local frag2 = __hamt_frag(hash2, level)
+
+    if frag1 == frag2 then
+        local frag_bit = pow2[frag1 + 1]
+        local new_node = __hamt_fork(level + __HAMT_BITS, hash1, node1, hash2, node2)
+        return { __HAMT_BITMAP, 1, frag_bit, new_node }
+    end
+
+    local frag1_bit = pow2[frag1 + 1]
+    local frag2_bit = pow2[frag2 + 1]
+
+    if frag1 < frag2 then
+        return { __HAMT_BITMAP, 2, frag1_bit + frag2_bit, node1, node2 }
+    else
+        return { __HAMT_BITMAP, 2, frag1_bit + frag2_bit, node2, node1 }
     end
 end
 
 ---@param node immut.hamt_node
----@param shift integer
+---@param level integer
 ---@param key immut.hamt_key
 ---@param hash immut.hamt_hash
 ---@param value immut.hamt_value
 ---@return immut.hamt_node new_node
 ---@return integer size_delta
----@return boolean changed
 ---@nodiscard
----@diagnostic disable-next-line: unused-local
-local function __hamt_assoc(node, shift, key, hash, value)
+local function __hamt_assoc(node, level, key, hash, value)
+    local pow2 = __immut_pow2
+    local pc32 = __immut_popcount32
+
+    if node == nil then
+        return { __HAMT_LEAF, key, hash, value }, 1
+    end
+
+    ---@type integer
+    local node_type = node[1]
+
+    if node_type == __HAMT_LEAF then
+        local node_key = node[__HAMT_LEAF_NODE_KEY]
+        local node_hash = node[__HAMT_LEAF_NODE_HASH]
+
+        if node_key == key then
+            local node_value = node[__HAMT_LEAF_NODE_VALUE]
+
+            if node_value == value then
+                return node, 0
+            end
+
+            return { __HAMT_LEAF, key, hash, value }, 0
+        elseif node_hash == hash then
+            local node_value = node[__HAMT_LEAF_NODE_VALUE]
+            return { __HAMT_COLLISION, hash, 2, node_key, node_value, key, value }, 1
+        else
+            local new_node = { __HAMT_LEAF, key, hash, value }
+            return __hamt_fork(level, node_hash, node, hash, new_node), 1
+        end
+    elseif node_type == __HAMT_BITMAP then
+        ---@type integer
+        local node_arity = node[__HAMT_BITMAP_NODE_ARITY]
+
+        ---@type integer
+        local node_bitmap = node[__HAMT_BITMAP_NODE_BITMAP]
+
+        local fst_child = __HAMT_BITMAP_NODE_CHILDREN
+        local lst_child = __HAMT_BITMAP_NODE_CHILDREN + node_arity - 1
+
+        local frag = __hamt_frag(hash, level)
+        local frag_bit = pow2[frag + 1]
+
+        if node_bitmap % (frag_bit + frag_bit) < frag_bit then
+            local bit_child = pc32(node_bitmap % frag_bit) + fst_child
+
+            ---@type immut.hamt_node_bitmap
+            local new_node = { __HAMT_BITMAP, node_arity + 1, node_bitmap + frag_bit }
+
+            for i = fst_child, bit_child - 1 do new_node[i] = node[i] end
+            new_node[bit_child] = { __HAMT_LEAF, key, hash, value }
+            for i = bit_child, lst_child do new_node[i + 1] = node[i] end
+
+            return new_node, 1
+        else
+            local bit_child = pc32(node_bitmap % frag_bit) + fst_child
+            local bit_child_node = node[bit_child]
+
+            local new_child_node, size_delta = __hamt_assoc(
+                bit_child_node, level + __HAMT_BITS, key, hash, value)
+
+            if new_child_node == bit_child_node then
+                return node, 0
+            end
+
+            ---@type immut.hamt_node_bitmap
+            local new_node = { __HAMT_BITMAP, node_arity, node_bitmap }
+
+            for i = fst_child, bit_child - 1 do new_node[i] = node[i] end
+            new_node[bit_child] = new_child_node
+            for i = bit_child + 1, lst_child do new_node[i] = node[i] end
+
+            return new_node, size_delta
+        end
+    elseif node_type == __HAMT_COLLISION then
+        local node_hash = node[__HAMT_COLLISION_NODE_HASH]
+        local node_arity = node[__HAMT_COLLISION_NODE_ARITY]
+
+        if node_hash ~= hash then
+            local new_node = { __HAMT_LEAF, key, hash, value }
+            return __hamt_fork(level, node_hash, node, hash, new_node), 1
+        end
+
+        local fst_entry = __HAMT_COLLISION_NODE_ENTRIES
+        local lst_entry = __HAMT_COLLISION_NODE_ENTRIES + 2 * node_arity - 2
+
+        for i = fst_entry, lst_entry, 2 do
+            local entry_key = node[i]
+
+            if entry_key == key then
+                local entry_value = node[i + 1]
+
+                if entry_value == value then
+                    return node, 0
+                end
+
+                ---@type immut.hamt_node_collision
+                local new_node = { __HAMT_COLLISION, node_hash, node_arity }
+
+                for j = fst_entry, i - 2, 2 do
+                    new_node[j] = node[j]
+                    new_node[j + 1] = node[j + 1]
+                end
+
+                new_node[i] = key
+                new_node[i + 1] = value
+
+                for j = i + 2, lst_entry, 2 do
+                    new_node[j] = node[j]
+                    new_node[j + 1] = node[j + 1]
+                end
+
+                return new_node, 0
+            end
+        end
+
+        ---@type immut.hamt_node_collision
+        local new_node = { __HAMT_COLLISION, node_hash, node_arity + 1 }
+
+        for j = fst_entry, lst_entry, 2 do
+            new_node[j] = node[j]
+            new_node[j + 1] = node[j + 1]
+        end
+
+        new_node[lst_entry + 2] = key
+        new_node[lst_entry + 3] = value
+
+        return new_node, 1
+    end
+
+    __lua_error(__lua_string_format(
+        'invalid hamt node type: %s',
+        __lua_tostring(node_type)))
 end
 
 ---@param node immut.hamt_node
----@param shift integer
+---@param level integer
 ---@param key immut.hamt_key
 ---@param hash immut.hamt_hash
----@return immut.hamt_node new_node
+---@return immut.hamt_node? new_node
 ---@return integer size_delta
----@return boolean changed
 ---@nodiscard
----@diagnostic disable-next-line: unused-local
-local function __hamt_dissoc(node, shift, key, hash)
+local function __hamt_dissoc(node, level, key, hash)
+    local pow2 = __immut_pow2
+    local pc32 = __immut_popcount32
+
+    if node == nil then
+        return nil, 0
+    end
+
+    ---@type integer
+    local node_type = node[1]
+
+    if node_type == __HAMT_LEAF then
+        local node_key = node[__HAMT_LEAF_NODE_KEY]
+
+        if node_key == key then
+            return nil, -1
+        end
+
+        return node, 0
+    elseif node_type == __HAMT_BITMAP then
+        ---@type integer
+        local node_arity = node[__HAMT_BITMAP_NODE_ARITY]
+
+        ---@type integer
+        local node_bitmap = node[__HAMT_BITMAP_NODE_BITMAP]
+
+        local fst_child = __HAMT_BITMAP_NODE_CHILDREN
+        local lst_child = __HAMT_BITMAP_NODE_CHILDREN + node_arity - 1
+
+        local frag = __hamt_frag(hash, level)
+        local frag_bit = pow2[frag + 1]
+
+        if node_bitmap % (frag_bit + frag_bit) < frag_bit then
+            return node, 0
+        else
+            local bit_child = pc32(node_bitmap % frag_bit) + fst_child
+            local bit_child_node = node[bit_child]
+
+            local new_child_node, size_delta = __hamt_dissoc(
+                bit_child_node, level + __HAMT_BITS, key, hash)
+
+            if new_child_node == bit_child_node then
+                return node, 0
+            end
+
+            if new_child_node then
+                if node_arity == 1 and new_child_node[1] == __HAMT_LEAF then
+                    return new_child_node, size_delta
+                end
+
+                ---@type immut.hamt_node_bitmap
+                local new_node = { __HAMT_BITMAP, node_arity, node_bitmap }
+
+                for i = fst_child, bit_child - 1 do new_node[i] = node[i] end
+                new_node[bit_child] = new_child_node
+                for i = bit_child + 1, lst_child do new_node[i] = node[i] end
+
+                return new_node, size_delta
+            else
+                if node_arity == 1 then
+                    return nil, size_delta
+                end
+
+                if node_arity == 2 then
+                    local rem_i = bit_child == fst_child and lst_child or fst_child
+                    local rem_node = node[rem_i]
+
+                    if rem_node[1] == __HAMT_LEAF then
+                        return rem_node, size_delta
+                    end
+                end
+
+                ---@type immut.hamt_node_bitmap
+                local new_node = { __HAMT_BITMAP, node_arity - 1, node_bitmap - frag_bit }
+
+                for i = fst_child, bit_child - 1 do new_node[i] = node[i] end
+                for i = bit_child + 1, lst_child do new_node[i - 1] = node[i] end
+
+                return new_node, size_delta
+            end
+        end
+    elseif node_type == __HAMT_COLLISION then
+        local node_hash = node[__HAMT_COLLISION_NODE_HASH]
+        local node_arity = node[__HAMT_COLLISION_NODE_ARITY]
+
+        if node_hash ~= hash then
+            return node, 0
+        end
+
+        local fst_entry = __HAMT_COLLISION_NODE_ENTRIES
+        local lst_entry = __HAMT_COLLISION_NODE_ENTRIES + 2 * node_arity - 2
+
+        for i = fst_entry, lst_entry, 2 do
+            local entry_key = node[i]
+
+            if entry_key == key then
+                if node_arity == 2 then
+                    local rem_i = i == fst_entry and lst_entry or fst_entry
+                    return { __HAMT_LEAF, node[rem_i], node_hash, node[rem_i + 1] }, -1
+                end
+
+                ---@type immut.hamt_node_collision
+                local new_node = { __HAMT_COLLISION, node_hash, node_arity - 1 }
+
+                for j = fst_entry, i - 2, 2 do
+                    new_node[j] = node[j]
+                    new_node[j + 1] = node[j + 1]
+                end
+
+                for j = i + 2, lst_entry, 2 do
+                    new_node[j - 2] = node[j]
+                    new_node[j - 1] = node[j + 1]
+                end
+
+                return new_node, -1
+            end
+        end
+
+        return node, 0
+    end
+
+    __lua_error(__lua_string_format(
+        'invalid hamt node type: %s',
+        __lua_tostring(node_type)))
 end
 
 ---@param node immut.hamt_node
----@param shift integer
+---@param level integer
 ---@param key immut.hamt_key
 ---@param hash immut.hamt_hash
 ---@return immut.hamt_value value
 ---@nodiscard
----@diagnostic disable-next-line: unused-local
-local function __hamt_lookup(node, shift, key, hash)
+local function __hamt_lookup(node, level, key, hash)
+    local pow2 = __immut_pow2
+    local pc32 = __immut_popcount32
+
+    while node ~= nil do
+        local node_type = node[1]
+
+        if node_type == __HAMT_LEAF then
+            local node_key = node[__HAMT_LEAF_NODE_KEY]
+            if node_key ~= key then return nil end
+
+            local node_value = node[__HAMT_LEAF_NODE_VALUE]
+            return node_value
+        elseif node_type == __HAMT_BITMAP then
+            local node_bitmap = node[__HAMT_BITMAP_NODE_BITMAP]
+
+            local frag = __hamt_frag(hash, level)
+            local frag_bit = pow2[frag + 1]
+
+            if node_bitmap % (frag_bit + frag_bit) < frag_bit then
+                return nil
+            end
+
+            local fst_child = __HAMT_BITMAP_NODE_CHILDREN
+            local bit_child = pc32(node_bitmap % frag_bit) + fst_child
+
+            node = node[bit_child]
+            level = level + __HAMT_BITS
+        elseif node_type == __HAMT_COLLISION then
+            local node_hash = node[__HAMT_COLLISION_NODE_HASH]
+            if node_hash ~= hash then return nil end
+
+            local node_arity = node[__HAMT_COLLISION_NODE_ARITY]
+
+            local fst_entry = __HAMT_COLLISION_NODE_ENTRIES
+            local lst_entry = __HAMT_COLLISION_NODE_ENTRIES + 2 * node_arity - 1
+
+            for i = fst_entry, lst_entry, 2 do
+                local entry_key = node[i]
+
+                if entry_key == key then
+                    local entry_value = node[i + 1]
+                    return entry_value
+                end
+            end
+
+            return nil
+        end
+    end
 end
 
 ---
@@ -463,35 +824,35 @@ function __hamt_dict_mt:empty()
 end
 
 function __hamt_dict_mt:assoc(key, value)
-    local hash = __hamt_hash(key)
+    local root, hash = self.__root, __hamt_hash(key)
 
-    local new_root, size_delta, changed = __hamt_assoc(self.__root, 0, key, hash, value)
+    local new_root, size_delta = __hamt_assoc(root, 1, key, hash, value)
 
-    if not changed then
+    if new_root == root then
         return self
     end
 
-    return setmetatable({ __size = self.__size + size_delta, __root = new_root }, __hamt_dict_mt)
+    return __lua_setmetatable({ __size = self.__size + size_delta, __root = new_root }, __hamt_dict_mt)
 end
 
 function __hamt_dict_mt:dissoc(key)
-    local hash = __hamt_hash(key)
+    local root, hash = self.__root, __hamt_hash(key)
 
-    local new_root, size_delta, changed = __hamt_dissoc(self.__root, 0, key, hash)
+    local new_root, size_delta = __hamt_dissoc(root, 1, key, hash)
 
-    if not changed then
+    if new_root == root then
         return self
     end
 
-    return setmetatable({ __size = self.__size + size_delta, __root = new_root }, __hamt_dict_mt)
+    return __lua_setmetatable({ __size = self.__size + size_delta, __root = new_root }, __hamt_dict_mt)
 end
 
 function __hamt_dict_mt:lookup(key)
-    return __hamt_lookup(self.__root, 0, key, __hamt_hash(key))
+    return __hamt_lookup(self.__root, 1, key, __hamt_hash(key))
 end
 
 function __hamt_dict_mt:contains(key)
-    return __hamt_lookup(self.__root, 0, key, __hamt_hash(key)) ~= nil
+    return __hamt_lookup(self.__root, 1, key, __hamt_hash(key)) ~= nil
 end
 
 ---
