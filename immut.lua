@@ -551,9 +551,8 @@ local function __hamt_assoc(node, level, key, hash, value)
             ---@type immut.hamt_node_bitmap
             local new_node = { __HAMT_BITMAP, node_arity, node_bitmap }
 
-            for i = fst_child, bit_child - 1 do new_node[i] = node[i] end
+            for i = fst_child, lst_child do new_node[i] = node[i] end
             new_node[bit_child] = new_child_node
-            for i = bit_child + 1, lst_child do new_node[i] = node[i] end
 
             return new_node, size_delta
         end
@@ -672,7 +671,7 @@ local function __hamt_dissoc(node, level, key, hash)
                 if node_arity == 1 then
                     local new_child_node_type = new_child_node[1]
 
-                    if new_child_node_type == __HAMT_LEAF or new_child_node_type == __HAMT_COLLISION then
+                    if new_child_node_type ~= __HAMT_BITMAP then
                         return new_child_node, size_delta
                     end
                 end
@@ -680,9 +679,8 @@ local function __hamt_dissoc(node, level, key, hash)
                 ---@type immut.hamt_node_bitmap
                 local new_node = { __HAMT_BITMAP, node_arity, node_bitmap }
 
-                for i = fst_child, bit_child - 1 do new_node[i] = node[i] end
+                for i = fst_child, lst_child do new_node[i] = node[i] end
                 new_node[bit_child] = new_child_node
-                for i = bit_child + 1, lst_child do new_node[i] = node[i] end
 
                 return new_node, size_delta
             else
@@ -696,7 +694,7 @@ local function __hamt_dissoc(node, level, key, hash)
                     local rem_node = node[rem_i]
                     local rem_node_type = rem_node[1]
 
-                    if rem_node_type == __HAMT_LEAF or rem_node_type == __HAMT_COLLISION then
+                    if rem_node_type ~= __HAMT_BITMAP then
                         return rem_node, size_delta
                     end
                 end
