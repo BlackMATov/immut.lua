@@ -359,6 +359,57 @@ end
 
 ---
 ---
+--- ISLL LIST IMPLEMENTATION
+---
+---
+
+---@class immut.isll_list : immut.list
+---@field package __head any
+---@field package __tail immut.isll_list
+local __isll_list_mt = __lua_setmetatable({}, __list_mt)
+__isll_list_mt.__index = __isll_list_mt
+
+local function isll_list_new()
+    return __lua_setmetatable({ __head = nil, __tail = nil }, __isll_list_mt)
+end
+
+__empty_lists['isll'] = isll_list_new()
+immut.AVAILABLE_LIST_MODES[#immut.AVAILABLE_LIST_MODES + 1] = 'isll'
+
+function __isll_list_mt:size()
+    __lua_error 'impl me'
+end
+
+function __isll_list_mt:empty()
+    __lua_error 'impl me'
+end
+
+function __isll_list_mt:head()
+    __lua_error 'impl me'
+end
+
+function __isll_list_mt:last()
+    __lua_error 'impl me'
+end
+
+function __isll_list_mt:tail()
+    __lua_error 'impl me'
+end
+
+function __isll_list_mt:init()
+    __lua_error 'impl me'
+end
+
+function __isll_list_mt:cons(head)
+    __lua_error 'impl me'
+end
+
+function __isll_list_mt:snoc(last)
+    __lua_error 'impl me'
+end
+
+---
+---
 --- COPY DICT IMPLEMENTATION
 ---
 ---
