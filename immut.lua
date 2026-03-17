@@ -28,6 +28,7 @@ local immut = {
 }
 
 local __lua_error = error
+local __lua_next = next
 local __lua_setmetatable = setmetatable
 local __lua_tostring = tostring
 local __lua_type = type
@@ -228,13 +229,13 @@ function __dict_mt:contains(key) __lua_error 'not implemented' end
 immut.AVAILABLE_LIST_MODES = {}
 
 ---@type table<immut.list_mode, immut.list>
-local __empty_lists = {}
+local __EMPTY_LISTS = {}
 
 ---@param mode immut.list_mode
 ---@return immut.list
 ---@nodiscard
 function immut.list(mode)
-    return __empty_lists[mode] or __lua_error(__lua_string_format(
+    return __EMPTY_LISTS[mode] or __lua_error(__lua_string_format(
         'invalid list mode: %s, expected one of: %s',
         __lua_tostring(mode), __lua_table_concat(immut.AVAILABLE_LIST_MODES, ', ')))
 end
@@ -252,13 +253,13 @@ end
 immut.AVAILABLE_DICT_MODES = {}
 
 ---@type table<immut.dict_mode, immut.dict>
-local __empty_dicts = {}
+local __EMPTY_DICTS = {}
 
 ---@param mode immut.dict_mode
 ---@return immut.dict
 ---@nodiscard
 function immut.dict(mode)
-    return __empty_dicts[mode] or __lua_error(__lua_string_format(
+    return __EMPTY_DICTS[mode] or __lua_error(__lua_string_format(
         'invalid dict mode: %s, expected one of: %s',
         __lua_tostring(mode), __lua_table_concat(immut.AVAILABLE_DICT_MODES, ', ')))
 end
@@ -275,11 +276,12 @@ end
 local __copy_list_mt = __lua_setmetatable({}, __list_mt)
 __copy_list_mt.__index = __copy_list_mt
 
-local function copy_list_new()
-    return __lua_setmetatable({ __size = 0, __elems = {} }, __copy_list_mt)
-end
+local __EMPTY_COPY_LIST = __lua_setmetatable({
+    __size = 0,
+    __elems = {},
+}, __copy_list_mt)
 
-__empty_lists['copy'] = copy_list_new()
+__EMPTY_LISTS['copy'] = __EMPTY_COPY_LIST
 immut.AVAILABLE_LIST_MODES[#immut.AVAILABLE_LIST_MODES + 1] = 'copy'
 
 function __copy_list_mt:size()
@@ -299,62 +301,75 @@ function __copy_list_mt:last()
 end
 
 function __copy_list_mt:tail()
-    if self.__size == 0 then
+    local self_size, self_elems = self.__size, self.__elems
+
+    if self_size == 0 then
         return nil
     end
 
-    local tail = copy_list_new()
+    local tail_elems = __opt_table_new and __opt_table_new(self_size - 1) or {}
 
-    for i = 2, self.__size do
-        tail.__elems[i - 1] = self.__elems[i]
+    for i = 2, self_size do
+        tail_elems[i - 1] = self_elems[i]
     end
 
-    tail.__size = self.__size - 1
-
-    return tail
+    return __lua_setmetatable({
+        __size = self_size - 1,
+        __elems = tail_elems,
+    }, __copy_list_mt)
 end
 
 function __copy_list_mt:init()
-    if self.__size == 0 then
+    local self_size, self_elems = self.__size, self.__elems
+
+    if self_size == 0 then
         return nil
     end
 
-    local init = copy_list_new()
+    local init_elems = __opt_table_new and __opt_table_new(self_size - 1) or {}
 
-    for i = 1, self.__size - 1 do
-        init.__elems[i] = self.__elems[i]
+    for i = 1, self_size - 1 do
+        init_elems[i] = self_elems[i]
     end
 
-    init.__size = self.__size - 1
-
-    return init
+    return __lua_setmetatable({
+        __size = self_size - 1,
+        __elems = init_elems,
+    }, __copy_list_mt)
 end
 
 function __copy_list_mt:cons(head)
-    local new_list = copy_list_new()
+    local self_size, self_elems = self.__size, self.__elems
 
-    new_list.__elems[1] = head
+    local cons_elems = __opt_table_new and __opt_table_new(self_size + 1) or {}
 
-    for i = 1, self.__size do
-        new_list.__elems[i + 1] = self.__elems[i]
+    cons_elems[1] = head
+
+    for i = 1, self_size do
+        cons_elems[i + 1] = self_elems[i]
     end
 
-    new_list.__size = self.__size + 1
-
-    return new_list
+    return __lua_setmetatable({
+        __size = self_size + 1,
+        __elems = cons_elems,
+    }, __copy_list_mt)
 end
 
 function __copy_list_mt:snoc(last)
-    local new_list = copy_list_new()
+    local self_size, self_elems = self.__size, self.__elems
 
-    for i = 1, self.__size do
-        new_list.__elems[i] = self.__elems[i]
+    local snoc_elems = __opt_table_new and __opt_table_new(self_size + 1) or {}
+
+    for i = 1, self_size do
+        snoc_elems[i] = self_elems[i]
     end
 
-    new_list.__elems[self.__size + 1] = last
-    new_list.__size = self.__size + 1
+    snoc_elems[self_size + 1] = last
 
-    return new_list
+    return __lua_setmetatable({
+        __size = self_size + 1,
+        __elems = snoc_elems,
+    }, __copy_list_mt)
 end
 
 ---
@@ -369,12 +384,13 @@ end
 local __isll_list_mt = __lua_setmetatable({}, __list_mt)
 __isll_list_mt.__index = __isll_list_mt
 
-local function isll_list_new()
-    return __lua_setmetatable({ __head = nil, __tail = nil }, __isll_list_mt)
-end
+local __EMPTY_ISLL_LIST = __lua_setmetatable({
+    __head = nil,
+    __tail = nil,
+}, __isll_list_mt)
 
-__empty_lists['isll'] = isll_list_new()
-immut.AVAILABLE_LIST_MODES[#immut.AVAILABLE_LIST_MODES + 1] = 'isll'
+__EMPTY_LISTS['isll'] = __EMPTY_ISLL_LIST
+--immut.AVAILABLE_LIST_MODES[#immut.AVAILABLE_LIST_MODES + 1] = 'isll'
 
 function __isll_list_mt:size()
     __lua_error 'impl me'
@@ -420,11 +436,12 @@ end
 local __copy_dict_mt = __lua_setmetatable({}, __dict_mt)
 __copy_dict_mt.__index = __copy_dict_mt
 
-local function copy_dict_new()
-    return __lua_setmetatable({ __size = 0, __pairs = {} }, __copy_dict_mt)
-end
+local __EMPTY_COPY_DICT = __lua_setmetatable({
+    __size = 0,
+    __pairs = {},
+}, __copy_dict_mt)
 
-__empty_dicts['copy'] = copy_dict_new()
+__EMPTY_DICTS['copy'] = __EMPTY_COPY_DICT
 immut.AVAILABLE_DICT_MODES[#immut.AVAILABLE_DICT_MODES + 1] = 'copy'
 
 function __copy_dict_mt:size()
@@ -444,22 +461,26 @@ function __copy_dict_mt:assoc(key, value)
         __lua_error('copy dict does not support nil values')
     end
 
-    local self_value = self.__pairs[key]
+    local self_size, self_pairs = self.__size, self.__pairs
+
+    local self_value = self_pairs[key]
 
     if self_value == value then
         return self
     end
 
-    local new_dict = copy_dict_new()
+    local assoc_pairs = {}
 
-    for k, v in pairs(self.__pairs) do
-        new_dict.__pairs[k] = v
+    for k, v in __lua_next, self_pairs do
+        assoc_pairs[k] = v
     end
 
-    new_dict.__pairs[key] = value
-    new_dict.__size = self.__size + (self_value == nil and 1 or 0)
+    assoc_pairs[key] = value
 
-    return new_dict
+    return __lua_setmetatable({
+        __size = self_size + (self_value == nil and 1 or 0),
+        __pairs = assoc_pairs,
+    }, __copy_dict_mt)
 end
 
 function __copy_dict_mt:dissoc(key)
@@ -467,22 +488,26 @@ function __copy_dict_mt:dissoc(key)
         __lua_error('copy dict does not support nil keys')
     end
 
-    local self_value = self.__pairs[key]
+    local self_size, self_pairs = self.__size, self.__pairs
+
+    local self_value = self_pairs[key]
 
     if self_value == nil then
         return self
     end
 
-    local new_dict = copy_dict_new()
+    local dissoc_pairs = {}
 
-    for k, v in pairs(self.__pairs) do
-        new_dict.__pairs[k] = v
+    for k, v in __lua_next, self_pairs do
+        dissoc_pairs[k] = v
     end
 
-    new_dict.__pairs[key] = nil
-    new_dict.__size = self.__size - 1
+    dissoc_pairs[key] = nil
 
-    return new_dict
+    return __lua_setmetatable({
+        __size = self_size - 1,
+        __pairs = dissoc_pairs,
+    }, __copy_dict_mt)
 end
 
 function __copy_dict_mt:lookup(key)
@@ -1031,11 +1056,12 @@ end
 local __hamt_dict_mt = __lua_setmetatable({}, __dict_mt)
 __hamt_dict_mt.__index = __hamt_dict_mt
 
-local function hamt_dict_new()
-    return __lua_setmetatable({ __size = 0, __root = nil }, __hamt_dict_mt)
-end
+local __empty_hamt_dict = __lua_setmetatable({
+    __size = 0,
+    __root = nil,
+}, __hamt_dict_mt)
 
-__empty_dicts['hamt'] = hamt_dict_new()
+__EMPTY_DICTS['hamt'] = __empty_hamt_dict
 immut.AVAILABLE_DICT_MODES[#immut.AVAILABLE_DICT_MODES + 1] = 'hamt'
 
 function __hamt_dict_mt:size()
