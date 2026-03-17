@@ -308,8 +308,10 @@ function __copy_list_mt:tail()
 
     local tail_elems = __opt_table_new and __opt_table_new(self_size - 1) or {}
 
-    for i = 2, self_size do
-        tail_elems[i - 1] = self_elems[i]
+    if __opt_table_move then
+        __opt_table_move(self_elems, 2, self_size, 1, tail_elems)
+    else
+        for i = 2, self_size do tail_elems[i - 1] = self_elems[i] end
     end
 
     return __lua_setmetatable({
@@ -327,8 +329,10 @@ function __copy_list_mt:init()
 
     local init_elems = __opt_table_new and __opt_table_new(self_size - 1) or {}
 
-    for i = 1, self_size - 1 do
-        init_elems[i] = self_elems[i]
+    if __opt_table_move then
+        __opt_table_move(self_elems, 1, self_size - 1, 1, init_elems)
+    else
+        for i = 1, self_size - 1 do init_elems[i] = self_elems[i] end
     end
 
     return __lua_setmetatable({
@@ -344,8 +348,10 @@ function __copy_list_mt:cons(head)
 
     cons_elems[1] = head
 
-    for i = 1, self_size do
-        cons_elems[i + 1] = self_elems[i]
+    if __opt_table_move then
+        __opt_table_move(self_elems, 1, self_size, 2, cons_elems)
+    else
+        for i = 1, self_size do cons_elems[i + 1] = self_elems[i] end
     end
 
     return __lua_setmetatable({
@@ -359,8 +365,12 @@ function __copy_list_mt:snoc(last)
 
     local snoc_elems = __opt_table_new and __opt_table_new(self_size + 1) or {}
 
-    for i = 1, self_size do
-        snoc_elems[i] = self_elems[i]
+    if __opt_table_move then
+        __opt_table_move(self_elems, 1, self_size, 1, snoc_elems)
+    else
+        for i = 1, self_size do
+            snoc_elems[i] = self_elems[i]
+        end
     end
 
     snoc_elems[self_size + 1] = last
