@@ -906,11 +906,11 @@ local function __hamt_assoc(node, level, key, hash, value)
         end
 
         return new_node, 1
+    else
+        __lua_error(__lua_string_format(
+            'invalid hamt node type: %s',
+            __lua_tostring(node_type)))
     end
-
-    __lua_error(__lua_string_format(
-        'invalid hamt node type: %s',
-        __lua_tostring(node_type)))
 end
 
 ---@param node immut.hamt_node
@@ -1047,11 +1047,11 @@ local function __hamt_dissoc(node, level, key, hash)
         end
 
         return node, 0
+    else
+        __lua_error(__lua_string_format(
+            'invalid hamt node type: %s',
+            __lua_tostring(node_type)))
     end
-
-    __lua_error(__lua_string_format(
-        'invalid hamt node type: %s',
-        __lua_tostring(node_type)))
 end
 
 ---@param node immut.hamt_node
@@ -1105,6 +1105,10 @@ local function __hamt_lookup(node, level, key, hash)
             end
 
             return nil
+        else
+            __lua_error(__lua_string_format(
+                'invalid hamt node type: %s',
+                __lua_tostring(node_type)))
         end
     end
 end
