@@ -1,7 +1,7 @@
 local immut = require 'immut'
 local basics = require 'develop.basics'
 
-local NS = { 20, 100, 500 }
+local NS = { 100, 200, 400 }
 
 for mode_index, mode in ipairs(immut.AVAILABLE_DICT_MODES) do
     if mode_index > 1 then

@@ -52,7 +52,7 @@ luarocks install immut.lua
 list_mode :: 'copy' | 'isll'
 AVAILABLE_LIST_MODES :: list_mode[]
 
-dict_mode :: 'copy' | 'hamt' | 'tree'
+dict_mode :: 'copy' | 'hamt'
 AVAILABLE_DICT_MODES :: dict_mode[]
 ```
 

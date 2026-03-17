@@ -249,7 +249,6 @@ end
 ---@alias immut.dict_mode
 ---| 'copy' copy-based dict implementation
 ---| 'hamt' hash array mapped trie dict implementation
----| 'tree' balanced binary search tree dict implementation
 immut.AVAILABLE_DICT_MODES = {}
 
 ---@type table<immut.dict_mode, immut.dict>
@@ -390,38 +389,68 @@ local __EMPTY_ISLL_LIST = __lua_setmetatable({
 }, __isll_list_mt)
 
 __EMPTY_LISTS['isll'] = __EMPTY_ISLL_LIST
---immut.AVAILABLE_LIST_MODES[#immut.AVAILABLE_LIST_MODES + 1] = 'isll'
+immut.AVAILABLE_LIST_MODES[#immut.AVAILABLE_LIST_MODES + 1] = 'isll'
 
 function __isll_list_mt:size()
-    __lua_error 'impl me'
+    local size, curr = 0, self
+
+    while curr.__tail do
+        size = size + 1
+        curr = curr.__tail
+    end
+
+    return size
 end
 
 function __isll_list_mt:empty()
-    __lua_error 'impl me'
+    return not self.__tail
 end
 
 function __isll_list_mt:head()
-    __lua_error 'impl me'
+    return self.__head
 end
 
 function __isll_list_mt:last()
-    __lua_error 'impl me'
+    local last, curr = nil, self
+
+    while curr.__tail do
+        last = curr.__head
+        curr = curr.__tail
+    end
+
+    return last
 end
 
 function __isll_list_mt:tail()
-    __lua_error 'impl me'
+    return self.__tail
 end
 
 function __isll_list_mt:init()
-    __lua_error 'impl me'
+    local self_head, self_tail = self.__head, self.__tail
+
+    if not self_tail then
+        return nil
+    end
+
+    if not self_tail.__tail then
+        return __EMPTY_ISLL_LIST
+    end
+
+    return self_tail:init():cons(self_head)
 end
 
 function __isll_list_mt:cons(head)
-    __lua_error 'impl me'
+    return __lua_setmetatable({ __head = head, __tail = self }, __isll_list_mt)
 end
 
 function __isll_list_mt:snoc(last)
-    __lua_error 'impl me'
+    local self_head, self_tail = self.__head, self.__tail
+
+    if not self_tail then
+        return __EMPTY_ISLL_LIST:cons(last)
+    end
+
+    return self_tail:snoc(last):cons(self_head)
 end
 
 ---
@@ -1056,12 +1085,12 @@ end
 local __hamt_dict_mt = __lua_setmetatable({}, __dict_mt)
 __hamt_dict_mt.__index = __hamt_dict_mt
 
-local __empty_hamt_dict = __lua_setmetatable({
+local __EMPTY_HAMT_DICT = __lua_setmetatable({
     __size = 0,
     __root = nil,
 }, __hamt_dict_mt)
 
-__EMPTY_DICTS['hamt'] = __empty_hamt_dict
+__EMPTY_DICTS['hamt'] = __EMPTY_HAMT_DICT
 immut.AVAILABLE_DICT_MODES[#immut.AVAILABLE_DICT_MODES + 1] = 'hamt'
 
 function __hamt_dict_mt:size()
