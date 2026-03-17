@@ -373,6 +373,18 @@ end
 
 ---
 ---
+--- ISLL IMPLEMENTATION
+---
+---
+
+---@type any[]
+local __isll_list_init_temp_head_list = __lua_setmetatable({}, { __mode = 'v' })
+
+---@type any[]
+local __isll_list_snoc_temp_head_list = __lua_setmetatable({}, { __mode = 'v' })
+
+---
+---
 --- ISLL LIST IMPLEMENTATION
 ---
 ---
@@ -426,17 +438,27 @@ function __isll_list_mt:tail()
 end
 
 function __isll_list_mt:init()
-    local self_head, self_tail = self.__head, self.__tail
+    local head, tail = self.__head, self.__tail
 
-    if not self_tail then
+    if not tail then
         return nil
     end
 
-    if not self_tail.__tail then
-        return __EMPTY_ISLL_LIST
+    local head_list, head_count = __isll_list_init_temp_head_list, 0
+
+    while tail do
+        head_count = head_count + 1
+        head_list[head_count] = head
+        head, tail = tail.__head, tail.__tail
     end
 
-    return self_tail:init():cons(self_head)
+    local init = __EMPTY_ISLL_LIST
+
+    for i = head_count - 1, 1, -1 do
+        init = init:cons(head_list[i])
+    end
+
+    return init
 end
 
 function __isll_list_mt:cons(head)
@@ -444,13 +466,27 @@ function __isll_list_mt:cons(head)
 end
 
 function __isll_list_mt:snoc(last)
-    local self_head, self_tail = self.__head, self.__tail
+    local head, tail = self.__head, self.__tail
 
-    if not self_tail then
-        return __EMPTY_ISLL_LIST:cons(last)
+    if not tail then
+        return self:cons(last)
     end
 
-    return self_tail:snoc(last):cons(self_head)
+    local head_list, head_count = __isll_list_snoc_temp_head_list, 0
+
+    while tail do
+        head_count = head_count + 1
+        head_list[head_count] = head
+        head, tail = tail.__head, tail.__tail
+    end
+
+    local snoc = __EMPTY_ISLL_LIST:cons(last)
+
+    for i = head_count, 1, -1 do
+        snoc = snoc:cons(head_list[i])
+    end
+
+    return snoc
 end
 
 ---
