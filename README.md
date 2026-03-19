@@ -49,10 +49,10 @@ luarocks install immut.lua
 ## Cheat Sheet
 
 ```
-list_mode :: 'copy' | 'isll'
+list_mode :: 'isll'
 AVAILABLE_LIST_MODES :: list_mode[]
 
-dict_mode :: 'copy' | 'hamt'
+dict_mode :: 'hamt'
 AVAILABLE_DICT_MODES :: dict_mode[]
 ```
 

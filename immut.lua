@@ -28,7 +28,6 @@ local immut = {
 }
 
 local __lua_error = error
-local __lua_next = next
 local __lua_setmetatable = setmetatable
 local __lua_tostring = tostring
 local __lua_type = type
@@ -224,7 +223,6 @@ function __dict_mt:contains(key) __lua_error 'not implemented' end
 ---
 
 ---@alias immut.list_mode
----| 'copy' copy-based list implementation
 ---| 'isll' immutable singly-linked list implementation
 immut.AVAILABLE_LIST_MODES = {}
 
@@ -247,7 +245,6 @@ end
 ---
 
 ---@alias immut.dict_mode
----| 'copy' copy-based dict implementation
 ---| 'hamt' hash array mapped trie dict implementation
 immut.AVAILABLE_DICT_MODES = {}
 
@@ -261,124 +258,6 @@ function immut.dict(mode)
     return __EMPTY_DICTS[mode] or __lua_error(__lua_string_format(
         'invalid dict mode: %s, expected one of: %s',
         __lua_tostring(mode), __lua_table_concat(immut.AVAILABLE_DICT_MODES, ', ')))
-end
-
----
----
---- COPY LIST IMPLEMENTATION
----
----
-
----@class immut.copy_list : immut.list
----@field package __size integer
----@field package __elems any[]
-local __copy_list_mt = __lua_setmetatable({}, __list_mt)
-__copy_list_mt.__index = __copy_list_mt
-
-local __EMPTY_COPY_LIST = __lua_setmetatable({
-    __size = 0,
-    __elems = {},
-}, __copy_list_mt)
-
-__EMPTY_LISTS['copy'] = __EMPTY_COPY_LIST
-immut.AVAILABLE_LIST_MODES[#immut.AVAILABLE_LIST_MODES + 1] = 'copy'
-
-function __copy_list_mt:size()
-    return self.__size
-end
-
-function __copy_list_mt:empty()
-    return self.__size == 0
-end
-
-function __copy_list_mt:head()
-    return self.__elems[1]
-end
-
-function __copy_list_mt:last()
-    return self.__elems[self.__size]
-end
-
-function __copy_list_mt:tail()
-    local self_size, self_elems = self.__size, self.__elems
-
-    if self_size == 0 then
-        return nil
-    end
-
-    local tail_elems = __opt_table_new and __opt_table_new(self_size - 1) or {}
-
-    if __opt_table_move then
-        __opt_table_move(self_elems, 2, self_size, 1, tail_elems)
-    else
-        for i = 2, self_size do tail_elems[i - 1] = self_elems[i] end
-    end
-
-    return __lua_setmetatable({
-        __size = self_size - 1,
-        __elems = tail_elems,
-    }, __copy_list_mt)
-end
-
-function __copy_list_mt:init()
-    local self_size, self_elems = self.__size, self.__elems
-
-    if self_size == 0 then
-        return nil
-    end
-
-    local init_elems = __opt_table_new and __opt_table_new(self_size - 1) or {}
-
-    if __opt_table_move then
-        __opt_table_move(self_elems, 1, self_size - 1, 1, init_elems)
-    else
-        for i = 1, self_size - 1 do init_elems[i] = self_elems[i] end
-    end
-
-    return __lua_setmetatable({
-        __size = self_size - 1,
-        __elems = init_elems,
-    }, __copy_list_mt)
-end
-
-function __copy_list_mt:cons(head)
-    local self_size, self_elems = self.__size, self.__elems
-
-    local cons_elems = __opt_table_new and __opt_table_new(self_size + 1) or {}
-
-    cons_elems[1] = head
-
-    if __opt_table_move then
-        __opt_table_move(self_elems, 1, self_size, 2, cons_elems)
-    else
-        for i = 1, self_size do cons_elems[i + 1] = self_elems[i] end
-    end
-
-    return __lua_setmetatable({
-        __size = self_size + 1,
-        __elems = cons_elems,
-    }, __copy_list_mt)
-end
-
-function __copy_list_mt:snoc(last)
-    local self_size, self_elems = self.__size, self.__elems
-
-    local snoc_elems = __opt_table_new and __opt_table_new(self_size + 1) or {}
-
-    if __opt_table_move then
-        __opt_table_move(self_elems, 1, self_size, 1, snoc_elems)
-    else
-        for i = 1, self_size do
-            snoc_elems[i] = self_elems[i]
-        end
-    end
-
-    snoc_elems[self_size + 1] = last
-
-    return __lua_setmetatable({
-        __size = self_size + 1,
-        __elems = snoc_elems,
-    }, __copy_list_mt)
 end
 
 ---
@@ -497,108 +376,6 @@ function __isll_list_mt:snoc(last)
     end
 
     return snoc
-end
-
----
----
---- COPY DICT IMPLEMENTATION
----
----
-
----@class immut.copy_dict : immut.dict
----@field package __size integer
----@field package __pairs table<any, any>
-local __copy_dict_mt = __lua_setmetatable({}, __dict_mt)
-__copy_dict_mt.__index = __copy_dict_mt
-
-local __EMPTY_COPY_DICT = __lua_setmetatable({
-    __size = 0,
-    __pairs = {},
-}, __copy_dict_mt)
-
-__EMPTY_DICTS['copy'] = __EMPTY_COPY_DICT
-immut.AVAILABLE_DICT_MODES[#immut.AVAILABLE_DICT_MODES + 1] = 'copy'
-
-function __copy_dict_mt:size()
-    return self.__size
-end
-
-function __copy_dict_mt:empty()
-    return self.__size == 0
-end
-
-function __copy_dict_mt:assoc(key, value)
-    if key == nil then
-        __lua_error('copy dict does not support nil keys')
-    end
-
-    if value == nil then
-        __lua_error('copy dict does not support nil values')
-    end
-
-    local self_size, self_pairs = self.__size, self.__pairs
-
-    local self_value = self_pairs[key]
-
-    if self_value == value then
-        return self
-    end
-
-    local assoc_pairs = {}
-
-    for k, v in __lua_next, self_pairs do
-        assoc_pairs[k] = v
-    end
-
-    assoc_pairs[key] = value
-
-    return __lua_setmetatable({
-        __size = self_size + (self_value == nil and 1 or 0),
-        __pairs = assoc_pairs,
-    }, __copy_dict_mt)
-end
-
-function __copy_dict_mt:dissoc(key)
-    if key == nil then
-        __lua_error('copy dict does not support nil keys')
-    end
-
-    local self_size, self_pairs = self.__size, self.__pairs
-
-    local self_value = self_pairs[key]
-
-    if self_value == nil then
-        return self
-    end
-
-    local dissoc_pairs = {}
-
-    for k, v in __lua_next, self_pairs do
-        dissoc_pairs[k] = v
-    end
-
-    dissoc_pairs[key] = nil
-
-    return __lua_setmetatable({
-        __size = self_size - 1,
-        __pairs = dissoc_pairs,
-    }, __copy_dict_mt)
-end
-
-function __copy_dict_mt:lookup(key)
-    if key == nil then
-        __lua_error('copy dict does not support nil keys')
-    end
-
-    return self.__pairs[key]
-end
-
-function __copy_dict_mt:contains(key)
-    if key == nil then
-        __lua_error('copy dict does not support nil keys')
-    end
-
-    return self.__pairs[key] ~= nil
 end
 
 ---
