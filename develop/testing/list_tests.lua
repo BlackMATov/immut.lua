@@ -163,29 +163,3 @@ do
     assert(list.size(l3) == 3 and not list.empty(l3))
     assert(list.head(l3) == 1 and list.last(l3) == 3)
 end
-
-do
-    local l = list.new()
-
-    l = list.cons(l, nil)
-    assert(list.size(l) == 1 and not list.empty(l))
-    assert(list.head(l) == nil and list.last(l) == nil)
-    assert(list.empty(list.tail(l)) and list.size(list.tail(l)) == 0)
-    assert(list.empty(list.init(l)) and list.size(list.init(l)) == 0)
-
-    l = list.snoc(l, nil)
-    assert(list.size(l) == 2 and not list.empty(l))
-    assert(list.head(l) == nil and list.last(l) == nil)
-    assert(list.empty(list.tail(l)) == false and list.size(list.tail(l)) == 1)
-    assert(list.head(list.tail(l)) == nil and list.last(list.tail(l)) == nil)
-    assert(list.empty(list.init(l)) == false and list.size(list.init(l)) == 1)
-    assert(list.head(list.init(l)) == nil and list.last(list.init(l)) == nil)
-
-    l = list.cons(l, 42)
-    assert(list.size(l) == 3 and not list.empty(l))
-    assert(list.head(l) == 42 and list.last(l) == nil)
-    assert(list.empty(list.tail(l)) == false and list.size(list.tail(l)) == 2)
-    assert(list.head(list.tail(l)) == nil and list.last(list.tail(l)) == nil)
-    assert(list.empty(list.init(l)) == false and list.size(list.init(l)) == 2)
-    assert(list.head(list.init(l)) == 42 and list.last(list.init(l)) == nil)
-end

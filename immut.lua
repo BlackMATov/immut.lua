@@ -923,6 +923,10 @@ end
 ---@return immut.list
 ---@nodiscard
 function __immut_list.cons(list, head)
+    if head == nil then
+        __lua_error('list does not support nil elements')
+    end
+
     return { head, list }
 end
 
@@ -932,6 +936,10 @@ end
 ---@return immut.list
 ---@nodiscard
 function __immut_list.snoc(list, last)
+    if last == nil then
+        __lua_error('list does not support nil elements')
+    end
+
     local tail = list[__LIST_TAIL]
 
     if not tail then
