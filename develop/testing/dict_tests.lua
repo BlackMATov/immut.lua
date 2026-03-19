@@ -1,118 +1,116 @@
-local immut = require 'immut'
+local dict = require 'immut'.dict
 
-for _, mode in ipairs(immut.AVAILABLE_DICT_MODES) do
+do
+    local m0 = dict.new()
+
     do
-        local m0 = immut.dict(mode)
+        assert(dict.size(m0) == 0)
+        assert(dict.empty(m0) == true)
 
-        do
-            assert(m0:size() == 0)
-            assert(m0:empty() == true)
+        assert(dict.contains(m0, 42) == false)
+        assert(dict.lookup(m0, 42) == nil)
+        assert(dict.contains(m0, 'hello') == false)
+        assert(dict.lookup(m0, 'hello') == nil)
+    end
 
-            assert(m0:contains(42) == false)
-            assert(m0:lookup(42) == nil)
-            assert(m0:contains('hello') == false)
-            assert(m0:lookup('hello') == nil)
-        end
+    local m1 = dict.assoc(m0, 42, 21)
 
-        local m1 = m0:assoc(42, 21)
+    do
+        assert(dict.size(m0) == 0)
+        assert(dict.empty(m0) == true)
 
-        do
-            assert(m0:size() == 0)
-            assert(m0:empty() == true)
-
-            assert(m0:contains(42) == false)
-            assert(m0:lookup(42) == nil)
-            assert(m0:contains('hello') == false)
-            assert(m0:lookup('hello') == nil)
-        end
-
-        do
-            assert(m1:size() == 1)
-            assert(m1:empty() == false)
-
-            assert(m1:contains(42) == true)
-            assert(m1:lookup(42) == 21)
-            assert(m1:contains('hello') == false)
-            assert(m1:lookup('hello') == nil)
-        end
-
-        local m2 = m1:assoc('hello', 'world')
-
-        do
-            assert(m0:size() == 0)
-            assert(m0:empty() == true)
-
-            assert(m0:contains(42) == false)
-            assert(m0:lookup(42) == nil)
-            assert(m0:contains('hello') == false)
-            assert(m0:lookup('hello') == nil)
-        end
-
-        do
-            assert(m1:size() == 1)
-            assert(m1:empty() == false)
-
-            assert(m1:contains(42) == true)
-            assert(m1:lookup(42) == 21)
-            assert(m1:contains('hello') == false)
-            assert(m1:lookup('hello') == nil)
-        end
-
-        do
-            assert(m2:size() == 2)
-            assert(m2:empty() == false)
-
-            assert(m2:contains(42) == true)
-            assert(m2:lookup(42) == 21)
-            assert(m2:contains('hello') == true)
-            assert(m2:lookup('hello') == 'world')
-        end
+        assert(dict.contains(m0, 42) == false)
+        assert(dict.lookup(m0, 42) == nil)
+        assert(dict.contains(m0, 'hello') == false)
+        assert(dict.lookup(m0, 'hello') == nil)
     end
 
     do
-        local m2 = immut.dict(mode):assoc(42, 21):assoc('hello', 'world')
+        assert(dict.size(m1) == 1)
+        assert(dict.empty(m1) == false)
 
-        do
-            assert(m2:size() == 2)
-            assert(m2:empty() == false)
+        assert(dict.contains(m1, 42) == true)
+        assert(dict.lookup(m1, 42) == 21)
+        assert(dict.contains(m1, 'hello') == false)
+        assert(dict.lookup(m1, 'hello') == nil)
+    end
 
-            assert(m2:contains(42) == true)
-            assert(m2:lookup(42) == 21)
-            assert(m2:contains('hello') == true)
-            assert(m2:lookup('hello') == 'world')
-        end
+    local m2 = dict.assoc(m1, 'hello', 'world')
 
-        local m2_without_hello = m2:dissoc('hello')
-        local m2_without_42 = m2:dissoc(42)
+    do
+        assert(dict.size(m0) == 0)
+        assert(dict.empty(m0) == true)
 
-        do
-            assert(m2:size() == 2)
-            assert(m2:empty() == false)
+        assert(dict.contains(m0, 42) == false)
+        assert(dict.lookup(m0, 42) == nil)
+        assert(dict.contains(m0, 'hello') == false)
+        assert(dict.lookup(m0, 'hello') == nil)
+    end
 
-            assert(m2:contains(42) == true)
-            assert(m2:lookup(42) == 21)
-            assert(m2:contains('hello') == true)
-            assert(m2:lookup('hello') == 'world')
-        end
+    do
+        assert(dict.size(m1) == 1)
+        assert(dict.empty(m1) == false)
 
-        do
-            assert(m2_without_hello:size() == 1)
-            assert(m2_without_hello:empty() == false)
+        assert(dict.contains(m1, 42) == true)
+        assert(dict.lookup(m1, 42) == 21)
+        assert(dict.contains(m1, 'hello') == false)
+        assert(dict.lookup(m1, 'hello') == nil)
+    end
 
-            assert(m2_without_hello:contains(42) == true)
-            assert(m2_without_hello:lookup(42) == 21)
-            assert(m2_without_hello:contains('hello') == false)
-            assert(m2_without_hello:lookup('hello') == nil)
-        end
+    do
+        assert(dict.size(m2) == 2)
+        assert(dict.empty(m2) == false)
 
-        do
-            assert(m2_without_42:size() == 1)
-            assert(m2_without_42:empty() == false)
+        assert(dict.contains(m2, 42) == true)
+        assert(dict.lookup(m2, 42) == 21)
+        assert(dict.contains(m2, 'hello') == true)
+        assert(dict.lookup(m2, 'hello') == 'world')
+    end
+end
 
-            assert(m2_without_42:contains(42) == false)
-            assert(m2_without_42:lookup(42) == nil)
-            assert(m2_without_42:contains('hello') == true)
-            assert(m2_without_42:lookup('hello') == 'world')
-        end
+do
+    local m2 = dict.assoc(dict.assoc(dict.new(), 42, 21), 'hello', 'world')
+
+    do
+        assert(dict.size(m2) == 2)
+        assert(dict.empty(m2) == false)
+
+        assert(dict.contains(m2, 42) == true)
+        assert(dict.lookup(m2, 42) == 21)
+        assert(dict.contains(m2, 'hello') == true)
+        assert(dict.lookup(m2, 'hello') == 'world')
+    end
+
+    local m2_without_hello = dict.dissoc(m2, 'hello')
+    local m2_without_42 = dict.dissoc(m2, 42)
+
+    do
+        assert(dict.size(m2) == 2)
+        assert(dict.empty(m2) == false)
+
+        assert(dict.contains(m2, 42) == true)
+        assert(dict.lookup(m2, 42) == 21)
+        assert(dict.contains(m2, 'hello') == true)
+        assert(dict.lookup(m2, 'hello') == 'world')
+    end
+
+    do
+        assert(dict.size(m2_without_hello) == 1)
+        assert(dict.empty(m2_without_hello) == false)
+
+        assert(dict.contains(m2_without_hello, 42) == true)
+        assert(dict.lookup(m2_without_hello, 42) == 21)
+        assert(dict.contains(m2_without_hello, 'hello') == false)
+        assert(dict.lookup(m2_without_hello, 'hello') == nil)
+    end
+
+    do
+        assert(dict.size(m2_without_42) == 1)
+        assert(dict.empty(m2_without_42) == false)
+
+        assert(dict.contains(m2_without_42, 42) == false)
+        assert(dict.lookup(m2_without_42, 42) == nil)
+        assert(dict.contains(m2_without_42, 'hello') == true)
+        assert(dict.lookup(m2_without_42, 'hello') == 'world')
     end
 end

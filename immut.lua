@@ -28,20 +28,10 @@ local immut = {
 }
 
 local __lua_error = error
-local __lua_setmetatable = setmetatable
-local __lua_tostring = tostring
-local __lua_type = type
-
 local __lua_string_byte = string.byte
 local __lua_string_format = string.format
-local __lua_table_concat = table.concat
-
-local __immut_num_hash
-local __immut_str_hash
-
-local __immut_pow2
-local __immut_popcount8
-local __immut_popcount32
+local __lua_tostring = tostring
+local __lua_type = type
 
 ---
 ---
@@ -108,274 +98,170 @@ end)()
 
 ---
 ---
---- LIST API
+--- NUMBER HASHING
 ---
 ---
 
----@class immut.list
-local __list_mt = {}
-__list_mt.__index = __list_mt
-
----Returns the number of elements in the list.
+---@param v number
 ---@return integer
 ---@nodiscard
-function __list_mt:size() __lua_error 'not implemented' end
+local function __immut_num_hash(v)
+    if v * 0 ~= 0 then
+        if v ~= v then return 0xDEADBEEF end
+        return v < 0 and 0xCAFEBABE or 0xBABECAFE
+    end
 
----Returns `true` if the list contains no elements, `false` otherwise.
----@return boolean
----@nodiscard
-function __list_mt:empty() __lua_error 'not implemented' end
+    local h = 0x517CC1B7
 
----Retrieves the first element of the list.
----If the list is empty, it returns `nil`.
----@return any
----@nodiscard
-function __list_mt:head() __lua_error 'not implemented' end
+    if v < 0 then
+        h = 0x85EBCA77
+        v = -v
+    end
 
----Retrieves the last element of the list.
----If the list is empty, it returns `nil`.
----@return any
----@nodiscard
-function __list_mt:last() __lua_error 'not implemented' end
+    local f_part = v % 1
 
----Retrieves a new list containing all elements of the original list except the first one.
----If the list is empty, it returns `nil`.
----@return immut.list
----@nodiscard
-function __list_mt:tail() __lua_error 'not implemented' end
+    if f_part == 0 then
+        local i_part_lo = v % 2 ^ 32
+        local i_part_hi = (v - i_part_lo) / 2 ^ 32
 
----Retrieves a new list containing all elements of the original list except the last one.
----If the list is empty, it returns `nil`.
----@return immut.list
----@nodiscard
-function __list_mt:init() __lua_error 'not implemented' end
+        h = (h * 0x19660D + i_part_lo * 1013 + i_part_hi) % 2 ^ 32
 
----Returns a new list with a given element added to the front of the list.
----@param head any
----@return immut.list
----@nodiscard
----@diagnostic disable-next-line: unused-local
-function __list_mt:cons(head) __lua_error 'not implemented' end
+        local t = (h - h % 2 ^ 16) / 2 ^ 16
+        h = (h + t * 0x9E3779B1) % 2 ^ 32
 
----Returns a new list with a given element added to the end of the list.
----@param last any
----@return immut.list
----@nodiscard
----@diagnostic disable-next-line: unused-local
-function __list_mt:snoc(last) __lua_error 'not implemented' end
+        h = (h * 0x19660D) % 2 ^ 32
+    else
+        v = v - f_part
+
+        local i_part_lo = v % 2 ^ 32
+        local i_part_hi = (v - i_part_lo) / 2 ^ 32
+
+        f_part = f_part * 2 ^ 32
+        local f_part_hi = f_part - f_part % 1
+        f_part = (f_part - f_part_hi) * 2 ^ 32
+        local f_part_lo = f_part - f_part % 1
+
+        h = (h * 0x19660D + i_part_lo * 1013 + i_part_hi) % 2 ^ 32
+
+        local t = (h - h % 2 ^ 16) / 2 ^ 16
+        h = (h + t * 0x9E3779B1) % 2 ^ 32
+
+        h = (h * 0x19660D + f_part_hi * 1013 + f_part_lo) % 2 ^ 32
+    end
+
+    return h
+end
 
 ---
 ---
---- DICT API
+--- STRING HASHING
 ---
 ---
 
----@class immut.dict
-local __dict_mt = {}
-__dict_mt.__index = __dict_mt
-
----Returns the number of key-value pairs in the dict.
+---@param s string
 ---@return integer
 ---@nodiscard
-function __dict_mt:size() __lua_error 'not implemented' end
+local function __immut_str_hash(s)
+    local i, l, h = 1, #s, 5381
 
----Returns `true` if the dict contains no key-value pairs, `false` otherwise.
----@return boolean
+    while i <= l - 15 do
+        local c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16 = __lua_string_byte(s, i, i + 15)
+
+        h = h * 33 ^ 4 + c1 * 33 ^ 3 + c2 * 33 ^ 2 + c3 * 33 + c4
+        h = h % 2 ^ 32
+
+        h = h * 33 ^ 4 + c5 * 33 ^ 3 + c6 * 33 ^ 2 + c7 * 33 + c8
+        h = h % 2 ^ 32
+
+        h = h * 33 ^ 4 + c9 * 33 ^ 3 + c10 * 33 ^ 2 + c11 * 33 + c12
+        h = h % 2 ^ 32
+
+        h = h * 33 ^ 4 + c13 * 33 ^ 3 + c14 * 33 ^ 2 + c15 * 33 + c16
+        h = h % 2 ^ 32
+
+        i = i + 16
+    end
+
+    while i <= l - 7 do
+        local c1, c2, c3, c4, c5, c6, c7, c8 = __lua_string_byte(s, i, i + 7)
+
+        h = h * 33 ^ 4 + c1 * 33 ^ 3 + c2 * 33 ^ 2 + c3 * 33 + c4
+        h = h % 2 ^ 32
+
+        h = h * 33 ^ 4 + c5 * 33 ^ 3 + c6 * 33 ^ 2 + c7 * 33 + c8
+        h = h % 2 ^ 32
+
+        i = i + 8
+    end
+
+    while i <= l - 3 do
+        local c1, c2, c3, c4 = __lua_string_byte(s, i, i + 3)
+
+        h = h * 33 ^ 4 + c1 * 33 ^ 3 + c2 * 33 ^ 2 + c3 * 33 + c4
+        h = h % 2 ^ 32
+
+        i = i + 4
+    end
+
+    while i <= l - 1 do
+        local c1, c2 = __lua_string_byte(s, i, i + 1)
+
+        h = h * 33 ^ 2 + c1 * 33 + c2
+        h = h % 2 ^ 32
+
+        i = i + 2
+    end
+
+    while i <= l do
+        local c = __lua_string_byte(s, i)
+
+        h = h * 33 + c
+        h = h % 2 ^ 32
+
+        i = i + 1
+    end
+
+    return h
+end
+
+---
+---
+--- BITMAP UTILITIES
+---
+---
+
+---@type integer[]
+local __immut_pow2 = {
+    1, 2, 4, 8, 16, 32, 64, 128,
+    256, 512, 1024, 2048, 4096, 8192, 16384, 32768,
+    65536, 131072, 262144, 524288, 1048576, 2097152, 4194304, 8388608,
+    16777216, 33554432, 67108864, 134217728, 268435456, 536870912, 1073741824, 2147483648,
+}
+
+---@type integer[]
+local __immut_popcount8 = {
+    0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+    3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8,
+}
+
+---@param v integer
+---@return integer
 ---@nodiscard
-function __dict_mt:empty() __lua_error 'not implemented' end
+local function __immut_popcount32(v)
+    local pc8 = __immut_popcount8
 
----Associates a given key with a value in the dict, returning a new dict instance with the updated key-value pair.
----If the key already exists, its value is replaced with the new value.
----@param key any
----@param value any
----@return immut.dict
----@nodiscard
----@diagnostic disable-next-line: unused-local
-function __dict_mt:assoc(key, value) __lua_error 'not implemented' end
+    local bb1 = v % 2 ^ 8; v = (v - bb1) / 2 ^ 8
+    local bb2 = v % 2 ^ 8; v = (v - bb2) / 2 ^ 8
+    local bb3 = v % 2 ^ 8; v = (v - bb3) / 2 ^ 8
+    local bb4 = v
 
----Dissociates a given key from the dict, returning a new dict instance without the specified key.
----If the key does not exist, the original dict is returned unchanged.
----@param key any
----@return immut.dict
----@nodiscard
----@diagnostic disable-next-line: unused-local
-function __dict_mt:dissoc(key) __lua_error 'not implemented' end
-
----Retrieves the value associated with a given key in the dict.
----If the key does not exist, it returns `nil`.
----@param key any
----@return any
----@nodiscard
----@diagnostic disable-next-line: unused-local
-function __dict_mt:lookup(key) __lua_error 'not implemented' end
-
----Checks if a given key exists in the dict, returning `true` if it does and `false` otherwise.
----@param key any
----@return boolean
----@nodiscard
----@diagnostic disable-next-line: unused-local
-function __dict_mt:contains(key) __lua_error 'not implemented' end
-
----
----
---- LIST CTOR
----
----
-
----@alias immut.list_mode
----| 'isll' immutable singly-linked list implementation
-immut.AVAILABLE_LIST_MODES = {}
-
----@type table<immut.list_mode, immut.list>
-local __EMPTY_LISTS = {}
-
----@param mode immut.list_mode
----@return immut.list
----@nodiscard
-function immut.list(mode)
-    return __EMPTY_LISTS[mode] or __lua_error(__lua_string_format(
-        'invalid list mode: %s, expected one of: %s',
-        __lua_tostring(mode), __lua_table_concat(immut.AVAILABLE_LIST_MODES, ', ')))
-end
-
----
----
---- DICT CTOR
----
----
-
----@alias immut.dict_mode
----| 'hamt' hash array mapped trie dict implementation
-immut.AVAILABLE_DICT_MODES = {}
-
----@type table<immut.dict_mode, immut.dict>
-local __EMPTY_DICTS = {}
-
----@param mode immut.dict_mode
----@return immut.dict
----@nodiscard
-function immut.dict(mode)
-    return __EMPTY_DICTS[mode] or __lua_error(__lua_string_format(
-        'invalid dict mode: %s, expected one of: %s',
-        __lua_tostring(mode), __lua_table_concat(immut.AVAILABLE_DICT_MODES, ', ')))
-end
-
----
----
---- ISLL IMPLEMENTATION
----
----
-
----@type any[]
-local __isll_list_init_temp_head_list = __lua_setmetatable({}, { __mode = 'v' })
-
----@type any[]
-local __isll_list_snoc_temp_head_list = __lua_setmetatable({}, { __mode = 'v' })
-
----
----
---- ISLL LIST IMPLEMENTATION
----
----
-
----@class immut.isll_list : immut.list
----@field package __head any
----@field package __tail immut.isll_list
-local __isll_list_mt = __lua_setmetatable({}, __list_mt)
-__isll_list_mt.__index = __isll_list_mt
-
-local __EMPTY_ISLL_LIST = __lua_setmetatable({
-    __head = nil,
-    __tail = nil,
-}, __isll_list_mt)
-
-__EMPTY_LISTS['isll'] = __EMPTY_ISLL_LIST
-immut.AVAILABLE_LIST_MODES[#immut.AVAILABLE_LIST_MODES + 1] = 'isll'
-
-function __isll_list_mt:size()
-    local size, curr = 0, self
-
-    while curr.__tail do
-        size = size + 1
-        curr = curr.__tail
-    end
-
-    return size
-end
-
-function __isll_list_mt:empty()
-    return not self.__tail
-end
-
-function __isll_list_mt:head()
-    return self.__head
-end
-
-function __isll_list_mt:last()
-    local last, curr = nil, self
-
-    while curr.__tail do
-        last = curr.__head
-        curr = curr.__tail
-    end
-
-    return last
-end
-
-function __isll_list_mt:tail()
-    return self.__tail
-end
-
-function __isll_list_mt:init()
-    local head, tail = self.__head, self.__tail
-
-    if not tail then
-        return nil
-    end
-
-    local head_list, head_count = __isll_list_init_temp_head_list, 0
-
-    while tail do
-        head_count = head_count + 1
-        head_list[head_count] = head
-        head, tail = tail.__head, tail.__tail
-    end
-
-    local init = __EMPTY_ISLL_LIST
-
-    for i = head_count - 1, 1, -1 do
-        init = init:cons(head_list[i])
-    end
-
-    return init
-end
-
-function __isll_list_mt:cons(head)
-    return __lua_setmetatable({ __head = head, __tail = self }, __isll_list_mt)
-end
-
-function __isll_list_mt:snoc(last)
-    local head, tail = self.__head, self.__tail
-
-    if not tail then
-        return self:cons(last)
-    end
-
-    local head_list, head_count = __isll_list_snoc_temp_head_list, 0
-
-    while tail do
-        head_count = head_count + 1
-        head_list[head_count] = head
-        head, tail = tail.__head, tail.__tail
-    end
-
-    local snoc = __EMPTY_ISLL_LIST:cons(last)
-
-    for i = head_count, 1, -1 do
-        snoc = snoc:cons(head_list[i])
-    end
-
-    return snoc
+    return pc8[bb1 + 1] + pc8[bb2 + 1] + pc8[bb3 + 1] + pc8[bb4 + 1]
 end
 
 ---
@@ -902,250 +788,270 @@ end
 
 ---
 ---
---- HAMT DICT IMPLEMENTATION
+--- LIST IMPLEMENTATION
 ---
 ---
 
----@class immut.hamt_dict : immut.dict
+---@class immut.list
+---@field package __head any
+---@field package __tail immut.list
+
+---@type immut.list
+local __EMPTY_LIST = {
+    __head = nil,
+    __tail = nil,
+}
+
+local __immut_list = {}
+immut.list = __immut_list
+
+---Returns a new empty list.
+---@return immut.list
+---@nodiscard
+function __immut_list.new()
+    return __EMPTY_LIST
+end
+
+---Returns the number of elements in the list.
+---@param list immut.list
+---@return integer
+---@nodiscard
+function __immut_list.size(list)
+    local size, curr = 0, list
+
+    while curr.__tail do
+        size = size + 1
+        curr = curr.__tail
+    end
+
+    return size
+end
+
+---Returns `true` if the list contains no elements, `false` otherwise.
+---@param list immut.list
+---@return boolean
+---@nodiscard
+function __immut_list.empty(list)
+    return not list.__tail
+end
+
+---Retrieves the first element of the list.
+---If the list is empty, it returns `nil`.
+---@param list immut.list
+---@return any
+---@nodiscard
+function __immut_list.head(list)
+    return list.__head
+end
+
+---Retrieves the last element of the list.
+---If the list is empty, it returns `nil`.
+---@param list immut.list
+---@return any
+---@nodiscard
+function __immut_list.last(list)
+    local last, curr = nil, list
+
+    while curr.__tail do
+        last = curr.__head
+        curr = curr.__tail
+    end
+
+    return last
+end
+
+---Retrieves a new list containing all elements of the original list except the first one.
+---If the list is empty, it returns `nil`.
+---@param list immut.list
+---@return immut.list?
+---@nodiscard
+function __immut_list.tail(list)
+    return list.__tail
+end
+
+---Retrieves a new list containing all elements of the original list except the last one.
+---If the list is empty, it returns `nil`.
+---@param list immut.list
+---@return immut.list?
+---@nodiscard
+function __immut_list.init(list)
+    local head, tail = list.__head, list.__tail
+
+    if not tail then
+        return nil
+    end
+
+    local head_list, head_count = {}, 0
+
+    while tail do
+        head_count = head_count + 1
+        head_list[head_count] = head
+        head, tail = tail.__head, tail.__tail
+    end
+
+    local init = __EMPTY_LIST
+
+    for i = head_count - 1, 1, -1 do
+        init = __immut_list.cons(init, head_list[i])
+    end
+
+    return init
+end
+
+---Returns a new list with a given element added to the front of the list.
+---@param list immut.list
+---@param head any
+---@return immut.list
+---@nodiscard
+function __immut_list.cons(list, head)
+    return { __head = head, __tail = list }
+end
+
+---Returns a new list with a given element added to the end of the list.
+---@param list immut.list
+---@param last any
+---@return immut.list
+---@nodiscard
+function __immut_list.snoc(list, last)
+    local head, tail = list.__head, list.__tail
+
+    if not tail then
+        return __immut_list.cons(list, last)
+    end
+
+    local head_list, head_count = {}, 0
+
+    while tail do
+        head_count = head_count + 1
+        head_list[head_count] = head
+        head, tail = tail.__head, tail.__tail
+    end
+
+    local snoc = __immut_list.cons(__EMPTY_LIST, last)
+
+    for i = head_count, 1, -1 do
+        snoc = __immut_list.cons(snoc, head_list[i])
+    end
+
+    return snoc
+end
+
+---
+---
+--- DICT IMPLEMENTATION
+---
+---
+
+---@class immut.dict
 ---@field package __size integer
 ---@field package __root immut.hamt_node
-local __hamt_dict_mt = __lua_setmetatable({}, __dict_mt)
-__hamt_dict_mt.__index = __hamt_dict_mt
 
-local __EMPTY_HAMT_DICT = __lua_setmetatable({
+---@type immut.dict
+local __EMPTY_DICT = {
     __size = 0,
     __root = nil,
-}, __hamt_dict_mt)
+}
 
-__EMPTY_DICTS['hamt'] = __EMPTY_HAMT_DICT
-immut.AVAILABLE_DICT_MODES[#immut.AVAILABLE_DICT_MODES + 1] = 'hamt'
+local __immut_dict = {}
+immut.dict = __immut_dict
 
-function __hamt_dict_mt:size()
-    return self.__size
+---Returns a new empty dict.
+---@return immut.dict
+---@nodiscard
+function __immut_dict.new()
+    return __EMPTY_DICT
 end
 
-function __hamt_dict_mt:empty()
-    return self.__size == 0
+---Returns the number of key-value pairs in the dict.
+---@param dict immut.dict
+---@return integer
+---@nodiscard
+function __immut_dict.size(dict)
+    return dict.__size
 end
 
-function __hamt_dict_mt:assoc(key, value)
+---Returns `true` if the dict contains no key-value pairs, `false` otherwise.
+---@param dict immut.dict
+---@return boolean
+---@nodiscard
+function __immut_dict.empty(dict)
+    return dict.__size == 0
+end
+
+---Associates a given key with a value in the dict, returning a new dict instance with the updated key-value pair.
+---If the key already exists, its value is replaced with the new value.
+---@param dict immut.dict
+---@param key any
+---@param value any
+---@return immut.dict
+---@nodiscard
+function __immut_dict.assoc(dict, key, value)
     if key == nil then
-        __lua_error('hamt dict does not support nil keys')
+        __lua_error('dict does not support nil keys')
     end
 
     if value == nil then
-        __lua_error('hamt dict does not support nil values')
+        __lua_error('dict does not support nil values')
     end
 
-    local root, hash = self.__root, __hamt_hash(key)
+    local root, hash = dict.__root, __hamt_hash(key)
 
     local new_root, size_delta = __hamt_assoc(root, 1, key, hash, value)
 
     if new_root == root then
-        return self
+        return dict
     end
 
-    return __lua_setmetatable({ __size = self.__size + size_delta, __root = new_root }, __hamt_dict_mt)
+    return { __size = dict.__size + size_delta, __root = new_root }
 end
 
-function __hamt_dict_mt:dissoc(key)
+---Dissociates a given key from the dict, returning a new dict instance without the specified key.
+---If the key does not exist, the original dict is returned unchanged.
+---@param dict immut.dict
+---@param key any
+---@return immut.dict
+---@nodiscard
+function __immut_dict.dissoc(dict, key)
     if key == nil then
-        __lua_error('hamt dict does not support nil keys')
+        __lua_error('dict does not support nil keys')
     end
 
-    local root, hash = self.__root, __hamt_hash(key)
+    local root, hash = dict.__root, __hamt_hash(key)
 
     local new_root, size_delta = __hamt_dissoc(root, 1, key, hash)
 
     if new_root == root then
-        return self
+        return dict
     end
 
-    return __lua_setmetatable({ __size = self.__size + size_delta, __root = new_root }, __hamt_dict_mt)
+    return { __size = dict.__size + size_delta, __root = new_root }
 end
 
-function __hamt_dict_mt:lookup(key)
+---Retrieves the value associated with a given key in the dict.
+---If the key does not exist, it returns `nil`.
+---@param dict immut.dict
+---@param key any
+---@return any
+---@nodiscard
+function __immut_dict.lookup(dict, key)
     if key == nil then
-        __lua_error('hamt dict does not support nil keys')
+        __lua_error('dict does not support nil keys')
     end
 
-    return __hamt_lookup(self.__root, 1, key, __hamt_hash(key))
+    return __hamt_lookup(dict.__root, 1, key, __hamt_hash(key))
 end
 
-function __hamt_dict_mt:contains(key)
+---Checks if a given key exists in the dict, returning `true` if it does and `false` otherwise.
+---@param dict immut.dict
+---@param key any
+---@return boolean
+---@nodiscard
+function __immut_dict.contains(dict, key)
     if key == nil then
-        __lua_error('hamt dict does not support nil keys')
+        __lua_error('dict does not support nil keys')
     end
 
-    return __hamt_lookup(self.__root, 1, key, __hamt_hash(key)) ~= nil
-end
-
----
----
---- NUMBER HASHING
----
----
-
----@param v number
----@return integer
----@nodiscard
-function __immut_num_hash(v)
-    if v * 0 ~= 0 then
-        if v ~= v then return 0xDEADBEEF end
-        return v < 0 and 0xCAFEBABE or 0xBABECAFE
-    end
-
-    local h = 0x517CC1B7
-
-    if v < 0 then
-        h = 0x85EBCA77
-        v = -v
-    end
-
-    local f_part = v % 1
-
-    if f_part == 0 then
-        local i_part_lo = v % 2 ^ 32
-        local i_part_hi = (v - i_part_lo) / 2 ^ 32
-
-        h = (h * 0x19660D + i_part_lo * 1013 + i_part_hi) % 2 ^ 32
-
-        local t = (h - h % 2 ^ 16) / 2 ^ 16
-        h = (h + t * 0x9E3779B1) % 2 ^ 32
-
-        h = (h * 0x19660D) % 2 ^ 32
-    else
-        v = v - f_part
-
-        local i_part_lo = v % 2 ^ 32
-        local i_part_hi = (v - i_part_lo) / 2 ^ 32
-
-        f_part = f_part * 2 ^ 32
-        local f_part_hi = f_part - f_part % 1
-        f_part = (f_part - f_part_hi) * 2 ^ 32
-        local f_part_lo = f_part - f_part % 1
-
-        h = (h * 0x19660D + i_part_lo * 1013 + i_part_hi) % 2 ^ 32
-
-        local t = (h - h % 2 ^ 16) / 2 ^ 16
-        h = (h + t * 0x9E3779B1) % 2 ^ 32
-
-        h = (h * 0x19660D + f_part_hi * 1013 + f_part_lo) % 2 ^ 32
-    end
-
-    return h
-end
-
----
----
---- STRING HASHING
----
----
-
----@param s string
----@return integer
----@nodiscard
-function __immut_str_hash(s)
-    local i, l, h = 1, #s, 5381
-
-    while i <= l - 15 do
-        local c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16 = __lua_string_byte(s, i, i + 15)
-
-        h = h * 33 ^ 4 + c1 * 33 ^ 3 + c2 * 33 ^ 2 + c3 * 33 + c4
-        h = h % 2 ^ 32
-
-        h = h * 33 ^ 4 + c5 * 33 ^ 3 + c6 * 33 ^ 2 + c7 * 33 + c8
-        h = h % 2 ^ 32
-
-        h = h * 33 ^ 4 + c9 * 33 ^ 3 + c10 * 33 ^ 2 + c11 * 33 + c12
-        h = h % 2 ^ 32
-
-        h = h * 33 ^ 4 + c13 * 33 ^ 3 + c14 * 33 ^ 2 + c15 * 33 + c16
-        h = h % 2 ^ 32
-
-        i = i + 16
-    end
-
-    while i <= l - 7 do
-        local c1, c2, c3, c4, c5, c6, c7, c8 = __lua_string_byte(s, i, i + 7)
-
-        h = h * 33 ^ 4 + c1 * 33 ^ 3 + c2 * 33 ^ 2 + c3 * 33 + c4
-        h = h % 2 ^ 32
-
-        h = h * 33 ^ 4 + c5 * 33 ^ 3 + c6 * 33 ^ 2 + c7 * 33 + c8
-        h = h % 2 ^ 32
-
-        i = i + 8
-    end
-
-    while i <= l - 3 do
-        local c1, c2, c3, c4 = __lua_string_byte(s, i, i + 3)
-
-        h = h * 33 ^ 4 + c1 * 33 ^ 3 + c2 * 33 ^ 2 + c3 * 33 + c4
-        h = h % 2 ^ 32
-
-        i = i + 4
-    end
-
-    while i <= l - 1 do
-        local c1, c2 = __lua_string_byte(s, i, i + 1)
-
-        h = h * 33 ^ 2 + c1 * 33 + c2
-        h = h % 2 ^ 32
-
-        i = i + 2
-    end
-
-    while i <= l do
-        local c = __lua_string_byte(s, i)
-
-        h = h * 33 + c
-        h = h % 2 ^ 32
-
-        i = i + 1
-    end
-
-    return h
-end
-
----
----
---- BITMAP UTILITIES
----
----
-
----@type integer[]
-__immut_pow2 = {
-    1, 2, 4, 8, 16, 32, 64, 128,
-    256, 512, 1024, 2048, 4096, 8192, 16384, 32768,
-    65536, 131072, 262144, 524288, 1048576, 2097152, 4194304, 8388608,
-    16777216, 33554432, 67108864, 134217728, 268435456, 536870912, 1073741824, 2147483648,
-}
-
----@type integer[]
-__immut_popcount8 = {
-    0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-    3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8,
-}
-
----@param v integer
----@return integer
----@nodiscard
-function __immut_popcount32(v)
-    local pc8 = __immut_popcount8
-
-    local bb1 = v % 2 ^ 8; v = (v - bb1) / 2 ^ 8
-    local bb2 = v % 2 ^ 8; v = (v - bb2) / 2 ^ 8
-    local bb3 = v % 2 ^ 8; v = (v - bb3) / 2 ^ 8
-    local bb4 = v
-
-    return pc8[bb1 + 1] + pc8[bb2 + 1] + pc8[bb3 + 1] + pc8[bb4 + 1]
+    return __hamt_lookup(dict.__root, 1, key, __hamt_hash(key)) ~= nil
 end
 
 ---
