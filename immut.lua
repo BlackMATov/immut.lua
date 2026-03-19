@@ -812,7 +812,7 @@ function __immut_list.new()
     return __EMPTY_LIST
 end
 
----Returns the number of elements in the list.
+---O(n). Returns the number of elements in the list.
 ---@param list immut.list
 ---@return integer
 ---@nodiscard
@@ -827,7 +827,7 @@ function __immut_list.size(list)
     return size
 end
 
----Returns `true` if the list contains no elements, `false` otherwise.
+---O(1). Returns `true` if the list contains no elements, `false` otherwise.
 ---@param list immut.list
 ---@return boolean
 ---@nodiscard
@@ -835,7 +835,7 @@ function __immut_list.empty(list)
     return not list.__tail
 end
 
----Retrieves the first element of the list.
+---O(1). Retrieves the first element of the list.
 ---If the list is empty, it throws an error.
 ---@param list immut.list
 ---@return any
@@ -850,7 +850,7 @@ function __immut_list.head(list)
     return list.__head
 end
 
----Retrieves the last element of the list.
+---O(n). Retrieves the last element of the list.
 ---If the list is empty, it throws an error.
 ---@param list immut.list
 ---@return any
@@ -872,7 +872,7 @@ function __immut_list.last(list)
     return last
 end
 
----Retrieves a new list containing all elements of the original list except the first one.
+---O(1). Retrieves a new list containing all elements of the original list except the first one.
 ---If the list is empty, it throws an error.
 ---@param list immut.list
 ---@return immut.list
@@ -887,7 +887,7 @@ function __immut_list.tail(list)
     return tail
 end
 
----Retrieves a new list containing all elements of the original list except the last one.
+---O(n). Retrieves a new list containing all elements of the original list except the last one.
 ---If the list is empty, it throws an error.
 ---@param list immut.list
 ---@return immut.list
@@ -899,8 +899,8 @@ function __immut_list.init(list)
         __lua_error('attempt to get init of empty list')
     end
 
-    local curr = list
-    local head_list, head_count = {}, 0
+    local curr = tail
+    local head_list, head_count = { list.__head }, 1
 
     while curr.__tail do
         head_count = head_count + 1
@@ -917,7 +917,7 @@ function __immut_list.init(list)
     return init
 end
 
----Returns a new list with a given element added to the front of the list.
+---O(1). Returns a new list with a given element added to the front of the list.
 ---@param list immut.list
 ---@param head any
 ---@return immut.list
@@ -926,7 +926,7 @@ function __immut_list.cons(list, head)
     return { __head = head, __tail = list }
 end
 
----Returns a new list with a given element added to the end of the list.
+---O(n). Returns a new list with a given element added to the end of the list.
 ---@param list immut.list
 ---@param last any
 ---@return immut.list
@@ -938,8 +938,8 @@ function __immut_list.snoc(list, last)
         return { __head = last, __tail = __EMPTY_LIST }
     end
 
-    local curr = list
-    local head_list, head_count = {}, 0
+    local curr = tail
+    local head_list, head_count = { list.__head }, 1
 
     while curr.__tail do
         head_count = head_count + 1
