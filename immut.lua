@@ -982,7 +982,7 @@ function __immut_dict.new()
     return __EMPTY_DICT
 end
 
----Returns the number of key-value pairs in the dict.
+---O(1). Returns the number of key-value pairs in the dict.
 ---@param dict immut.dict
 ---@return integer
 ---@nodiscard
@@ -990,7 +990,7 @@ function __immut_dict.size(dict)
     return dict.__size
 end
 
----Returns `true` if the dict contains no key-value pairs, `false` otherwise.
+---O(1). Returns `true` if the dict contains no key-value pairs, `false` otherwise.
 ---@param dict immut.dict
 ---@return boolean
 ---@nodiscard
@@ -998,7 +998,7 @@ function __immut_dict.empty(dict)
     return dict.__size == 0
 end
 
----Associates a given key with a value in the dict, returning a new dict instance with the updated key-value pair.
+---O(log32 n). Associates a given key with a value in the dict, returning a new dict instance with the updated key-value pair.
 ---If the key already exists, its value is replaced with the new value.
 ---@param dict immut.dict
 ---@param key any
@@ -1025,7 +1025,7 @@ function __immut_dict.assoc(dict, key, value)
     return { __size = dict.__size + size_delta, __root = new_root }
 end
 
----Dissociates a given key from the dict, returning a new dict instance without the specified key.
+---O(log32 n). Dissociates a given key from the dict, returning a new dict instance without the specified key.
 ---If the key does not exist, the original dict is returned unchanged.
 ---@param dict immut.dict
 ---@param key any
@@ -1047,7 +1047,7 @@ function __immut_dict.dissoc(dict, key)
     return { __size = dict.__size + size_delta, __root = new_root }
 end
 
----Retrieves the value associated with a given key in the dict.
+---O(log32 n). Retrieves the value associated with a given key in the dict.
 ---If the key does not exist, it returns `nil`.
 ---@param dict immut.dict
 ---@param key any
@@ -1061,7 +1061,7 @@ function __immut_dict.lookup(dict, key)
     return __hamt_lookup(dict.__root, 1, key, __hamt_hash(key))
 end
 
----Checks if a given key exists in the dict, returning `true` if it does and `false` otherwise.
+---O(log32 n). Checks if a given key exists in the dict, returning `true` if it does and `false` otherwise.
 ---@param dict immut.dict
 ---@param key any
 ---@return boolean
