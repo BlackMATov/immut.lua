@@ -805,7 +805,7 @@ local __EMPTY_LIST = {
 local __immut_list = {}
 immut.list = __immut_list
 
----Returns a new empty list.
+---Returns an empty list.
 ---@return immut.list
 ---@nodiscard
 function __immut_list.new()
@@ -817,7 +817,7 @@ end
 ---@return integer
 ---@nodiscard
 function __immut_list.size(list)
-    local size, curr = 0, list
+    local curr, size = list, 0
 
     while curr.__tail do
         size = size + 1
@@ -836,21 +836,33 @@ function __immut_list.empty(list)
 end
 
 ---Retrieves the first element of the list.
----If the list is empty, it returns `nil`.
+---If the list is empty, it throws an error.
 ---@param list immut.list
 ---@return any
 ---@nodiscard
 function __immut_list.head(list)
+    local tail = list.__tail
+
+    if not tail then
+        __lua_error('attempt to get head of empty list')
+    end
+
     return list.__head
 end
 
 ---Retrieves the last element of the list.
----If the list is empty, it returns `nil`.
+---If the list is empty, it throws an error.
 ---@param list immut.list
 ---@return any
 ---@nodiscard
 function __immut_list.last(list)
-    local last, curr = nil, list
+    local tail = list.__tail
+
+    if not tail then
+        __lua_error('attempt to get last of empty list')
+    end
+
+    local curr, last = tail, list.__head
 
     while curr.__tail do
         last = curr.__head
@@ -861,38 +873,45 @@ function __immut_list.last(list)
 end
 
 ---Retrieves a new list containing all elements of the original list except the first one.
----If the list is empty, it returns `nil`.
+---If the list is empty, it throws an error.
 ---@param list immut.list
----@return immut.list?
+---@return immut.list
 ---@nodiscard
 function __immut_list.tail(list)
-    return list.__tail
+    local tail = list.__tail
+
+    if not tail then
+        __lua_error('attempt to get tail of empty list')
+    end
+
+    return tail
 end
 
 ---Retrieves a new list containing all elements of the original list except the last one.
----If the list is empty, it returns `nil`.
+---If the list is empty, it throws an error.
 ---@param list immut.list
----@return immut.list?
+---@return immut.list
 ---@nodiscard
 function __immut_list.init(list)
-    local head, tail = list.__head, list.__tail
+    local tail = list.__tail
 
     if not tail then
-        return nil
+        __lua_error('attempt to get init of empty list')
     end
 
+    local curr = list
     local head_list, head_count = {}, 0
 
-    while tail do
+    while curr.__tail do
         head_count = head_count + 1
-        head_list[head_count] = head
-        head, tail = tail.__head, tail.__tail
+        head_list[head_count] = curr.__head
+        curr = curr.__tail
     end
 
     local init = __EMPTY_LIST
 
     for i = head_count - 1, 1, -1 do
-        init = __immut_list.cons(init, head_list[i])
+        init = { __head = head_list[i], __tail = init }
     end
 
     return init
@@ -913,24 +932,25 @@ end
 ---@return immut.list
 ---@nodiscard
 function __immut_list.snoc(list, last)
-    local head, tail = list.__head, list.__tail
+    local tail = list.__tail
 
     if not tail then
-        return __immut_list.cons(list, last)
+        return { __head = last, __tail = __EMPTY_LIST }
     end
 
+    local curr = list
     local head_list, head_count = {}, 0
 
-    while tail do
+    while curr.__tail do
         head_count = head_count + 1
-        head_list[head_count] = head
-        head, tail = tail.__head, tail.__tail
+        head_list[head_count] = curr.__head
+        curr = curr.__tail
     end
 
-    local snoc = __immut_list.cons(__EMPTY_LIST, last)
+    local snoc = { __head = last, __tail = __EMPTY_LIST }
 
     for i = head_count, 1, -1 do
-        snoc = __immut_list.cons(snoc, head_list[i])
+        snoc = { __head = head_list[i], __tail = snoc }
     end
 
     return snoc
@@ -955,7 +975,7 @@ local __EMPTY_DICT = {
 local __immut_dict = {}
 immut.dict = __immut_dict
 
----Returns a new empty dict.
+---Returns an empty dict.
 ---@return immut.dict
 ---@nodiscard
 function __immut_dict.new()
