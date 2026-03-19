@@ -793,14 +793,14 @@ end
 ---
 
 ---@class immut.list
----@field package __head any
----@field package __tail immut.list
+---@field package [1] any head
+---@field package [2] immut.list? tail
+
+local __LIST_HEAD = 1
+local __LIST_TAIL = 2
 
 ---@type immut.list
-local __EMPTY_LIST = {
-    __head = nil,
-    __tail = nil,
-}
+local __EMPTY_LIST = { nil, nil }
 
 local __immut_list = {}
 immut.list = __immut_list
@@ -819,9 +819,9 @@ end
 function __immut_list.size(list)
     local curr, size = list, 0
 
-    while curr.__tail do
+    while curr[__LIST_TAIL] do
         size = size + 1
-        curr = curr.__tail
+        curr = curr[__LIST_TAIL]
     end
 
     return size
@@ -832,7 +832,7 @@ end
 ---@return boolean
 ---@nodiscard
 function __immut_list.empty(list)
-    return not list.__tail
+    return not list[__LIST_TAIL]
 end
 
 ---O(1). Retrieves the first element of the list.
@@ -841,13 +841,13 @@ end
 ---@return any
 ---@nodiscard
 function __immut_list.head(list)
-    local tail = list.__tail
+    local tail = list[__LIST_TAIL]
 
     if not tail then
         __lua_error('attempt to get head of empty list')
     end
 
-    return list.__head
+    return list[__LIST_HEAD]
 end
 
 ---O(n). Retrieves the last element of the list.
@@ -856,17 +856,17 @@ end
 ---@return any
 ---@nodiscard
 function __immut_list.last(list)
-    local tail = list.__tail
+    local tail = list[__LIST_TAIL]
 
     if not tail then
         __lua_error('attempt to get last of empty list')
     end
 
-    local curr, last = tail, list.__head
+    local curr, last = tail, list[__LIST_HEAD]
 
-    while curr.__tail do
-        last = curr.__head
-        curr = curr.__tail
+    while curr[__LIST_TAIL] do
+        last = curr[__LIST_HEAD]
+        curr = curr[__LIST_TAIL]
     end
 
     return last
@@ -878,7 +878,7 @@ end
 ---@return immut.list
 ---@nodiscard
 function __immut_list.tail(list)
-    local tail = list.__tail
+    local tail = list[__LIST_TAIL]
 
     if not tail then
         __lua_error('attempt to get tail of empty list')
@@ -893,25 +893,25 @@ end
 ---@return immut.list
 ---@nodiscard
 function __immut_list.init(list)
-    local tail = list.__tail
+    local tail = list[__LIST_TAIL]
 
     if not tail then
         __lua_error('attempt to get init of empty list')
     end
 
     local curr = tail
-    local head_list, head_count = { list.__head }, 1
+    local head_list, head_count = { list[__LIST_HEAD] }, 1
 
-    while curr.__tail do
+    while curr[__LIST_TAIL] do
         head_count = head_count + 1
-        head_list[head_count] = curr.__head
-        curr = curr.__tail
+        head_list[head_count] = curr[__LIST_HEAD]
+        curr = curr[__LIST_TAIL]
     end
 
     local init = __EMPTY_LIST
 
     for i = head_count - 1, 1, -1 do
-        init = { __head = head_list[i], __tail = init }
+        init = { head_list[i], init }
     end
 
     return init
@@ -923,7 +923,7 @@ end
 ---@return immut.list
 ---@nodiscard
 function __immut_list.cons(list, head)
-    return { __head = head, __tail = list }
+    return { head, list }
 end
 
 ---O(n). Returns a new list with a given element added to the end of the list.
@@ -932,25 +932,25 @@ end
 ---@return immut.list
 ---@nodiscard
 function __immut_list.snoc(list, last)
-    local tail = list.__tail
+    local tail = list[__LIST_TAIL]
 
     if not tail then
-        return { __head = last, __tail = __EMPTY_LIST }
+        return { last, __EMPTY_LIST }
     end
 
     local curr = tail
-    local head_list, head_count = { list.__head }, 1
+    local head_list, head_count = { list[__LIST_HEAD] }, 1
 
-    while curr.__tail do
+    while curr[__LIST_TAIL] do
         head_count = head_count + 1
-        head_list[head_count] = curr.__head
-        curr = curr.__tail
+        head_list[head_count] = curr[__LIST_HEAD]
+        curr = curr[__LIST_TAIL]
     end
 
-    local snoc = { __head = last, __tail = __EMPTY_LIST }
+    local snoc = { last, __EMPTY_LIST }
 
     for i = head_count, 1, -1 do
-        snoc = { __head = head_list[i], __tail = snoc }
+        snoc = { head_list[i], snoc }
     end
 
     return snoc
@@ -963,14 +963,14 @@ end
 ---
 
 ---@class immut.dict
----@field package __size integer
----@field package __root immut.hamt_node
+---@field package [1] integer size
+---@field package [2] immut.hamt_node? root
+
+local __DICT_SIZE = 1
+local __DICT_ROOT = 2
 
 ---@type immut.dict
-local __EMPTY_DICT = {
-    __size = 0,
-    __root = nil,
-}
+local __EMPTY_DICT = { 0, nil }
 
 local __immut_dict = {}
 immut.dict = __immut_dict
@@ -987,7 +987,7 @@ end
 ---@return integer
 ---@nodiscard
 function __immut_dict.size(dict)
-    return dict.__size
+    return dict[__DICT_SIZE]
 end
 
 ---O(1). Returns `true` if the dict contains no key-value pairs, `false` otherwise.
@@ -995,7 +995,7 @@ end
 ---@return boolean
 ---@nodiscard
 function __immut_dict.empty(dict)
-    return dict.__size == 0
+    return dict[__DICT_SIZE] == 0
 end
 
 ---O(log32 n). Associates a given key with a value in the dict, returning a new dict instance with the updated key-value pair.
@@ -1014,7 +1014,7 @@ function __immut_dict.assoc(dict, key, value)
         __lua_error('dict does not support nil values')
     end
 
-    local root, hash = dict.__root, __hamt_hash(key)
+    local root, hash = dict[__DICT_ROOT], __hamt_hash(key)
 
     local new_root, size_delta = __hamt_assoc(root, 1, key, hash, value)
 
@@ -1022,7 +1022,7 @@ function __immut_dict.assoc(dict, key, value)
         return dict
     end
 
-    return { __size = dict.__size + size_delta, __root = new_root }
+    return { dict[__DICT_SIZE] + size_delta, new_root }
 end
 
 ---O(log32 n). Dissociates a given key from the dict, returning a new dict instance without the specified key.
@@ -1036,7 +1036,7 @@ function __immut_dict.dissoc(dict, key)
         __lua_error('dict does not support nil keys')
     end
 
-    local root, hash = dict.__root, __hamt_hash(key)
+    local root, hash = dict[__DICT_ROOT], __hamt_hash(key)
 
     local new_root, size_delta = __hamt_dissoc(root, 1, key, hash)
 
@@ -1044,7 +1044,7 @@ function __immut_dict.dissoc(dict, key)
         return dict
     end
 
-    return { __size = dict.__size + size_delta, __root = new_root }
+    return { dict[__DICT_SIZE] + size_delta, new_root }
 end
 
 ---O(log32 n). Retrieves the value associated with a given key in the dict.
@@ -1058,7 +1058,7 @@ function __immut_dict.lookup(dict, key)
         __lua_error('dict does not support nil keys')
     end
 
-    return __hamt_lookup(dict.__root, 1, key, __hamt_hash(key))
+    return __hamt_lookup(dict[__DICT_ROOT], 1, key, __hamt_hash(key))
 end
 
 ---O(log32 n). Checks if a given key exists in the dict, returning `true` if it does and `false` otherwise.
@@ -1071,7 +1071,7 @@ function __immut_dict.contains(dict, key)
         __lua_error('dict does not support nil keys')
     end
 
-    return __hamt_lookup(dict.__root, 1, key, __hamt_hash(key)) ~= nil
+    return __hamt_lookup(dict[__DICT_ROOT], 1, key, __hamt_hash(key)) ~= nil
 end
 
 ---
