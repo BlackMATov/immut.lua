@@ -1,135 +1,191 @@
-local immut = require 'immut'
+local list = require 'immut'.list
 
-for _, mode in ipairs(immut.AVAILABLE_LIST_MODES) do
+do
+    local l0 = list.new()
+
     do
-        local l0 = immut.list(mode)
-
-        do
-            assert(l0:size() == 0)
-            assert(l0:empty() == true)
-            assert(l0:head() == nil)
-            assert(l0:last() == nil)
-            assert(l0:tail() == nil)
-            assert(l0:init() == nil)
-        end
-
-        local l1 = l0:cons(42)
-
-        do
-            assert(l0:size() == 0)
-            assert(l0:empty() == true)
-            assert(l0:head() == nil)
-            assert(l0:last() == nil)
-            assert(l0:tail() == nil)
-            assert(l0:init() == nil)
-        end
-
-        do
-            assert(l1:size() == 1)
-            assert(l1:empty() == false)
-            assert(l1:head() == 42)
-            assert(l1:last() == 42)
-            assert(l1:tail():size() == 0)
-            assert(l1:tail():empty() == true)
-            assert(l1:init():size() == 0)
-            assert(l1:init():empty() == true)
-        end
-
-        local l2 = l1:cons(21)
-
-        do
-            assert(l0:size() == 0)
-            assert(l0:empty() == true)
-            assert(l0:head() == nil)
-            assert(l0:last() == nil)
-            assert(l0:tail() == nil)
-            assert(l0:init() == nil)
-        end
-
-        do
-            assert(l1:size() == 1)
-            assert(l1:empty() == false)
-            assert(l1:head() == 42)
-            assert(l1:last() == 42)
-            assert(l1:tail():size() == 0)
-            assert(l1:tail():empty() == true)
-            assert(l1:init():size() == 0)
-            assert(l1:init():empty() == true)
-        end
-
-        do
-            assert(l2:size() == 2)
-            assert(l2:empty() == false)
-            assert(l2:head() == 21)
-            assert(l2:last() == 42)
-            assert(l2:tail():size() == 1)
-            assert(l2:tail():empty() == false)
-            assert(l2:tail():head() == 42)
-            assert(l2:tail():last() == 42)
-            assert(l2:tail():tail():size() == 0)
-            assert(l2:tail():tail():empty() == true)
-            assert(l2:init():size() == 1)
-            assert(l2:init():empty() == false)
-            assert(l2:init():head() == 21)
-            assert(l2:init():last() == 21)
-            assert(l2:init():init():size() == 0)
-            assert(l2:init():init():empty() == true)
-        end
-
-        local l3 = l2:snoc(84)
-
-        do
-            assert(l0:size() == 0)
-            assert(l0:empty() == true)
-            assert(l0:head() == nil)
-            assert(l0:last() == nil)
-            assert(l0:tail() == nil)
-            assert(l0:init() == nil)
-        end
-
-        do
-            assert(l1:size() == 1)
-            assert(l1:empty() == false)
-            assert(l1:head() == 42)
-            assert(l1:last() == 42)
-            assert(l1:tail():size() == 0)
-            assert(l1:tail():empty() == true)
-            assert(l1:init():size() == 0)
-            assert(l1:init():empty() == true)
-        end
-
-        do
-            assert(l2:size() == 2)
-            assert(l2:empty() == false)
-            assert(l2:head() == 21)
-            assert(l2:last() == 42)
-            assert(l2:tail():size() == 1)
-            assert(l2:tail():empty() == false)
-            assert(l2:tail():head() == 42)
-            assert(l2:tail():last() == 42)
-            assert(l2:tail():tail():size() == 0)
-            assert(l2:tail():tail():empty() == true)
-            assert(l2:init():size() == 1)
-            assert(l2:init():empty() == false)
-            assert(l2:init():head() == 21)
-            assert(l2:init():last() == 21)
-            assert(l2:init():init():size() == 0)
-            assert(l2:init():init():empty() == true)
-        end
-
-        do
-            assert(l3:size() == 3)
-            assert(l3:empty() == false)
-            assert(l3:head() == 21)
-            assert(l3:last() == 84)
-            assert(l3:tail():size() == 2)
-            assert(l3:tail():empty() == false)
-            assert(l3:tail():head() == 42)
-            assert(l3:tail():last() == 84)
-            assert(l3:tail():tail():size() == 1)
-            assert(l3:tail():tail():empty() == false)
-            assert(l3:tail():tail():head() == 84)
-            assert(l3:tail():tail():last() == 84)
-        end
+        assert(list.size(l0) == 0)
+        assert(list.empty(l0) == true)
     end
+
+    local l1 = list.cons(l0, 42)
+
+    do
+        assert(list.size(l0) == 0)
+        assert(list.empty(l0) == true)
+    end
+
+    do
+        assert(list.size(l1) == 1)
+        assert(list.empty(l1) == false)
+        assert(list.head(l1) == 42)
+        assert(list.last(l1) == 42)
+        assert(list.size(list.tail(l1)) == 0)
+        assert(list.empty(list.tail(l1)) == true)
+        assert(list.size(list.init(l1)) == 0)
+        assert(list.empty(list.init(l1)) == true)
+    end
+
+    local l2 = list.cons(l1, 21)
+
+    do
+        assert(list.size(l0) == 0)
+        assert(list.empty(l0) == true)
+    end
+
+    do
+        assert(list.size(l1) == 1)
+        assert(list.empty(l1) == false)
+        assert(list.head(l1) == 42)
+        assert(list.last(l1) == 42)
+        assert(list.size(list.tail(l1)) == 0)
+        assert(list.empty(list.tail(l1)) == true)
+        assert(list.size(list.init(l1)) == 0)
+        assert(list.empty(list.init(l1)) == true)
+    end
+
+    do
+        assert(list.size(l2) == 2)
+        assert(list.empty(l2) == false)
+        assert(list.head(l2) == 21)
+        assert(list.last(l2) == 42)
+        assert(list.size(list.tail(l2)) == 1)
+        assert(list.empty(list.tail(l2)) == false)
+        assert(list.head(list.tail(l2)) == 42)
+        assert(list.last(list.tail(l2)) == 42)
+        assert(list.size(list.tail(list.tail(l2))) == 0)
+        assert(list.empty(list.tail(list.tail(l2))) == true)
+        assert(list.size(list.init(l2)) == 1)
+        assert(list.empty(list.init(l2)) == false)
+        assert(list.head(list.init(l2)) == 21)
+        assert(list.last(list.init(l2)) == 21)
+        assert(list.size(list.init(list.init(l2))) == 0)
+        assert(list.empty(list.init(list.init(l2))) == true)
+    end
+
+    local l3 = list.snoc(l2, 84)
+
+    do
+        assert(list.size(l0) == 0)
+        assert(list.empty(l0) == true)
+    end
+
+    do
+        assert(list.size(l1) == 1)
+        assert(list.empty(l1) == false)
+        assert(list.head(l1) == 42)
+        assert(list.last(l1) == 42)
+        assert(list.size(list.tail(l1)) == 0)
+        assert(list.empty(list.tail(l1)) == true)
+        assert(list.size(list.init(l1)) == 0)
+        assert(list.empty(list.init(l1)) == true)
+    end
+
+    do
+        assert(list.size(l2) == 2)
+        assert(list.empty(l2) == false)
+        assert(list.head(l2) == 21)
+        assert(list.last(l2) == 42)
+        assert(list.size(list.tail(l2)) == 1)
+        assert(list.empty(list.tail(l2)) == false)
+        assert(list.head(list.tail(l2)) == 42)
+        assert(list.last(list.tail(l2)) == 42)
+        assert(list.size(list.tail(list.tail(l2))) == 0)
+        assert(list.empty(list.tail(list.tail(l2))) == true)
+        assert(list.size(list.init(l2)) == 1)
+        assert(list.empty(list.init(l2)) == false)
+        assert(list.head(list.init(l2)) == 21)
+        assert(list.last(list.init(l2)) == 21)
+        assert(list.size(list.init(list.init(l2))) == 0)
+        assert(list.empty(list.init(list.init(l2))) == true)
+    end
+
+    do
+        assert(list.size(l3) == 3)
+        assert(list.empty(l3) == false)
+        assert(list.head(l3) == 21)
+        assert(list.last(l3) == 84)
+        assert(list.size(list.tail(l3)) == 2)
+        assert(list.empty(list.tail(l3)) == false)
+        assert(list.head(list.tail(l3)) == 42)
+        assert(list.last(list.tail(l3)) == 84)
+        assert(list.size(list.tail(list.tail(l3))) == 1)
+        assert(list.empty(list.tail(list.tail(l3))) == false)
+        assert(list.head(list.tail(list.tail(l3))) == 84)
+        assert(list.last(list.tail(list.tail(l3))) == 84)
+    end
+end
+
+do
+    local l = list.cons(list.cons(list.cons(list.new(), 1), 2), 3)
+    assert(list.size(l) == 3 and not list.empty(l))
+
+    do
+        local l_tail = list.tail(l)
+        assert(list.size(l_tail) == 2 and not list.empty(l_tail))
+        assert(list.head(l_tail) == 2 and list.last(l_tail) == 1)
+
+        local l_tail_tail = list.tail(l_tail)
+        assert(list.size(l_tail_tail) == 1 and not list.empty(l_tail_tail))
+        assert(list.head(l_tail_tail) == 1 and list.last(l_tail_tail) == 1)
+
+        local l_tail_tail_tail = list.tail(l_tail_tail)
+        assert(list.size(l_tail_tail_tail) == 0 and list.empty(l_tail_tail_tail))
+    end
+
+    do
+        local l_init = list.init(l)
+        assert(list.size(l_init) == 2 and not list.empty(l_init))
+        assert(list.head(l_init) == 3 and list.last(l_init) == 2)
+
+        local l_init_init = list.init(l_init)
+        assert(list.size(l_init_init) == 1 and not list.empty(l_init_init))
+        assert(list.head(l_init_init) == 3 and list.last(l_init_init) == 3)
+
+        local l_init_init_init = list.init(l_init_init)
+        assert(list.size(l_init_init_init) == 0 and list.empty(l_init_init_init))
+    end
+end
+
+do
+    local l = list.new()
+    assert(list.size(l) == 0 and list.empty(l))
+
+    local l1 = list.snoc(l, 1)
+    assert(list.size(l1) == 1 and not list.empty(l1))
+    assert(list.head(l1) == 1 and list.last(l1) == 1)
+
+    local l2 = list.snoc(l1, 2)
+    assert(list.size(l2) == 2 and not list.empty(l2))
+    assert(list.head(l2) == 1 and list.last(l2) == 2)
+
+    local l3 = list.snoc(l2, 3)
+    assert(list.size(l3) == 3 and not list.empty(l3))
+    assert(list.head(l3) == 1 and list.last(l3) == 3)
+end
+
+do
+    local l = list.new()
+
+    l = list.cons(l, nil)
+    assert(list.size(l) == 1 and not list.empty(l))
+    assert(list.head(l) == nil and list.last(l) == nil)
+    assert(list.empty(list.tail(l)) and list.size(list.tail(l)) == 0)
+    assert(list.empty(list.init(l)) and list.size(list.init(l)) == 0)
+
+    l = list.snoc(l, nil)
+    assert(list.size(l) == 2 and not list.empty(l))
+    assert(list.head(l) == nil and list.last(l) == nil)
+    assert(list.empty(list.tail(l)) == false and list.size(list.tail(l)) == 1)
+    assert(list.head(list.tail(l)) == nil and list.last(list.tail(l)) == nil)
+    assert(list.empty(list.init(l)) == false and list.size(list.init(l)) == 1)
+    assert(list.head(list.init(l)) == nil and list.last(list.init(l)) == nil)
+
+    l = list.cons(l, 42)
+    assert(list.size(l) == 3 and not list.empty(l))
+    assert(list.head(l) == 42 and list.last(l) == nil)
+    assert(list.empty(list.tail(l)) == false and list.size(list.tail(l)) == 2)
+    assert(list.head(list.tail(l)) == nil and list.last(list.tail(l)) == nil)
+    assert(list.empty(list.init(l)) == false and list.size(list.init(l)) == 2)
+    assert(list.head(list.init(l)) == 42 and list.last(list.init(l)) == nil)
 end

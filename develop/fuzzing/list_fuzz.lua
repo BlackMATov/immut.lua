@@ -1,4 +1,4 @@
-local immut = require 'immut'
+local list = require 'immut'.list
 
 local OP_COUNT = math.random(5, 15)
 
@@ -33,101 +33,99 @@ local function update_possible_keys_or_values()
     end
 end
 
-for _, mode in ipairs(immut.AVAILABLE_LIST_MODES) do
-    do
-        update_possible_keys_or_values()
+do
+    update_possible_keys_or_values()
 
-        local curr_list = immut.list(mode)
+    local curr_list = list.new()
 
-        local expected_elems = {} ---@type table<integer, any>
-        local expected_head_index, expected_last_index = 1, 0
+    local expected_elems = {} ---@type table<integer, any>
+    local expected_head_index, expected_last_index = 1, 0
 
-        for _ = 1, OP_COUNT do
-            local new_elem = random_key_or_value()
+    for _ = 1, OP_COUNT do
+        local new_elem = random_key_or_value()
 
-            if math.random(1, 2) == 1 then
-                local next_list = curr_list:cons(new_elem)
+        if math.random(1, 2) == 1 then
+            local next_list = list.cons(curr_list, new_elem)
 
-                do
-                    local i = expected_head_index
-                    local iter_list = curr_list
+            do
+                local i = expected_head_index
+                local iter_list = curr_list
 
-                    while i <= expected_last_index do
-                        assert(iter_list:head() == expected_elems[i])
-                        assert(iter_list:last() == expected_elems[expected_last_index])
-                        assert(iter_list:empty() == false)
-                        assert(iter_list:size() == expected_last_index - i + 1)
-                        iter_list = iter_list:tail()
-                        i = i + 1
-                    end
-
-                    assert(iter_list:empty() == true)
-                    assert(iter_list:size() == 0)
+                while i <= expected_last_index do
+                    assert(list.head(iter_list) == expected_elems[i])
+                    assert(list.last(iter_list) == expected_elems[expected_last_index])
+                    assert(list.empty(iter_list) == false)
+                    assert(list.size(iter_list) == expected_last_index - i + 1)
+                    iter_list = list.tail(iter_list)
+                    i = i + 1
                 end
 
-                expected_elems[expected_head_index - 1] = new_elem
-                expected_head_index = expected_head_index - 1
-
-                do
-                    local i = expected_head_index
-                    local iter_list = next_list
-
-                    while i <= expected_last_index do
-                        assert(iter_list:head() == expected_elems[i])
-                        assert(iter_list:last() == expected_elems[expected_last_index])
-                        assert(iter_list:empty() == false)
-                        assert(iter_list:size() == expected_last_index - i + 1)
-                        iter_list = iter_list:tail()
-                        i = i + 1
-                    end
-
-                    assert(iter_list:empty() == true)
-                    assert(iter_list:size() == 0)
-                end
-
-                curr_list = next_list
-            else
-                local next_list = curr_list:snoc(new_elem)
-
-                do
-                    local i = expected_head_index
-                    local iter_list = curr_list
-
-                    while i <= expected_last_index do
-                        assert(iter_list:head() == expected_elems[i])
-                        assert(iter_list:last() == expected_elems[expected_last_index])
-                        assert(iter_list:empty() == false)
-                        assert(iter_list:size() == expected_last_index - i + 1)
-                        iter_list = iter_list:tail()
-                        i = i + 1
-                    end
-
-                    assert(iter_list:empty() == true)
-                    assert(iter_list:size() == 0)
-                end
-
-                expected_elems[expected_last_index + 1] = new_elem
-                expected_last_index = expected_last_index + 1
-
-                do
-                    local i = expected_head_index
-                    local iter_list = next_list
-
-                    while i <= expected_last_index do
-                        assert(iter_list:head() == expected_elems[i])
-                        assert(iter_list:last() == expected_elems[expected_last_index])
-                        assert(iter_list:empty() == false)
-                        assert(iter_list:size() == expected_last_index - i + 1)
-                        iter_list = iter_list:tail()
-                        i = i + 1
-                    end
-
-                    assert(iter_list:empty() == true)
-                    assert(iter_list:size() == 0)
-                end
-
-                curr_list = next_list
+                assert(list.empty(iter_list) == true)
+                assert(list.size(iter_list) == 0)
             end
+
+            expected_elems[expected_head_index - 1] = new_elem
+            expected_head_index = expected_head_index - 1
+
+            do
+                local i = expected_head_index
+                local iter_list = next_list
+
+                while i <= expected_last_index do
+                    assert(list.head(iter_list) == expected_elems[i])
+                    assert(list.last(iter_list) == expected_elems[expected_last_index])
+                    assert(list.empty(iter_list) == false)
+                    assert(list.size(iter_list) == expected_last_index - i + 1)
+                    iter_list = list.tail(iter_list)
+                    i = i + 1
+                end
+
+                assert(list.empty(iter_list) == true)
+                assert(list.size(iter_list) == 0)
+            end
+
+            curr_list = next_list
+        else
+            local next_list = list.snoc(curr_list, new_elem)
+
+            do
+                local i = expected_head_index
+                local iter_list = curr_list
+
+                while i <= expected_last_index do
+                    assert(list.head(iter_list) == expected_elems[i])
+                    assert(list.last(iter_list) == expected_elems[expected_last_index])
+                    assert(list.empty(iter_list) == false)
+                    assert(list.size(iter_list) == expected_last_index - i + 1)
+                    iter_list = list.tail(iter_list)
+                    i = i + 1
+                end
+
+                assert(list.empty(iter_list) == true)
+                assert(list.size(iter_list) == 0)
+            end
+
+            expected_elems[expected_last_index + 1] = new_elem
+            expected_last_index = expected_last_index + 1
+
+            do
+                local i = expected_head_index
+                local iter_list = next_list
+
+                while i <= expected_last_index do
+                    assert(list.head(iter_list) == expected_elems[i])
+                    assert(list.last(iter_list) == expected_elems[expected_last_index])
+                    assert(list.empty(iter_list) == false)
+                    assert(list.size(iter_list) == expected_last_index - i + 1)
+                    iter_list = list.tail(iter_list)
+                    i = i + 1
+                end
+
+                assert(list.empty(iter_list) == true)
+                assert(list.size(iter_list) == 0)
+            end
+
+            curr_list = next_list
         end
     end
 end

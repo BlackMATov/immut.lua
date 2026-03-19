@@ -48,45 +48,37 @@ luarocks install immut.lua
 
 ## Cheat Sheet
 
-```
-list_mode :: 'copy' | 'isll'
-AVAILABLE_LIST_MODES :: list_mode[]
-
-dict_mode :: 'copy' | 'hamt' | 'tree'
-AVAILABLE_DICT_MODES :: dict_mode[]
-```
-
 ### List
 
 ```
-list :: list_mode -> list_mt
+list.new :: list
 
-list_mt:size -> integer
-list_mt:empty -> boolean
+list.size :: list -> integer
+list.empty :: list -> boolean
 
-list_mt:head -> any
-list_mt:last -> any
+list.head :: list -> any
+list.last :: list -> any
 
-list_mt:tail -> list_mt
-list_mt:init -> list_mt
+list.tail :: list -> list?
+list.init :: list -> list?
 
-list_mt:cons :: any -> list_mt
-list_mt:snoc :: any -> list_mt
+list.cons :: list, any -> list
+list.snoc :: list, any -> list
 ```
 
 ### Dict
 
 ```
-dict :: dict_mode -> dict_mt
+dict.new :: dict
 
-dict_mt:size -> integer
-dict_mt:empty -> boolean
+dict.size :: dict -> integer
+dict.empty :: dict -> boolean
 
-dict_mt:assoc :: any, any -> dict_mt
-dict_mt:dissoc :: any -> dict_mt
+dict.assoc :: dict, any, any -> dict
+dict.dissoc :: dict, any -> dict
 
-dict_mt:lookup :: any -> any
-dict_mt:contains :: any -> boolean
+dict.lookup :: dict, any -> any
+dict.contains :: dict, any -> boolean
 ```
 
 ## Changelog

@@ -1,4 +1,4 @@
-local immut = require 'immut'
+local dict = require 'immut'.dict
 
 local ASSOC_COUNT = math.random(5, 15)
 local DISSOC_COUNT = math.random(10, 20)
@@ -34,28 +34,141 @@ local function update_possible_keys_or_values()
     end
 end
 
-for _, mode in ipairs(immut.AVAILABLE_DICT_MODES) do
-    do
-        update_possible_keys_or_values()
+do
+    update_possible_keys_or_values()
 
-        local curr_dict = immut.dict(mode)
+    local curr_dict = dict.new()
 
-        local expected_key_values = {} ---@type table<any, any>
-        local expected_size = 0 ---@type integer
+    local expected_key_values = {} ---@type table<any, any>
+    local expected_size = 0 ---@type integer
 
-        for _ = 1, ASSOC_COUNT do
+    for _ = 1, ASSOC_COUNT do
+        local new_key = random_key_or_value()
+        local new_value = random_key_or_value()
+
+        local next_dict = dict.assoc(curr_dict, new_key, new_value)
+
+        for _, key in ipairs(POSSIBLE_KEYS_OR_VALUES) do
+            if expected_key_values[key] ~= nil then
+                assert(dict.contains(curr_dict, key) == true)
+                assert(dict.lookup(curr_dict, key) == expected_key_values[key])
+            else
+                assert(dict.contains(curr_dict, key) == false)
+                assert(dict.lookup(curr_dict, key) == nil)
+            end
+        end
+
+        if expected_key_values[new_key] ~= nil then
+            if expected_key_values[new_key] == new_value then
+                assert(curr_dict == next_dict)
+            else
+                assert(curr_dict ~= next_dict)
+                expected_key_values[new_key] = new_value
+            end
+        else
+            assert(curr_dict ~= next_dict)
+            expected_key_values[new_key] = new_value
+            expected_size = expected_size + 1
+        end
+
+        assert(dict.size(next_dict) == expected_size)
+
+        for _, key in ipairs(POSSIBLE_KEYS_OR_VALUES) do
+            if expected_key_values[key] ~= nil then
+                assert(dict.contains(next_dict, key) == true)
+                assert(dict.lookup(next_dict, key) == expected_key_values[key])
+            else
+                assert(dict.contains(next_dict, key) == false)
+                assert(dict.lookup(next_dict, key) == nil)
+            end
+        end
+
+        curr_dict = next_dict
+    end
+end
+
+do
+    local curr_dict = dict.new()
+
+    local expected_key_values = {} ---@type table<any, any>
+    local expected_size = 0 ---@type integer
+
+    for _ = 1, ASSOC_COUNT do
+        local new_key = random_key_or_value()
+        local new_value = random_key_or_value()
+
+        curr_dict = dict.assoc(curr_dict, new_key, new_value)
+
+        if expected_key_values[new_key] == nil then
+            expected_size = expected_size + 1
+        end
+
+        expected_key_values[new_key] = new_value
+    end
+
+    for _ = 1, DISSOC_COUNT do
+        local rem_key = random_key_or_value()
+
+        local next_dict = dict.dissoc(curr_dict, rem_key)
+
+        for _, key in ipairs(POSSIBLE_KEYS_OR_VALUES) do
+            if expected_key_values[key] ~= nil then
+                assert(dict.contains(curr_dict, key) == true)
+                assert(dict.lookup(curr_dict, key) == expected_key_values[key])
+            else
+                assert(dict.contains(curr_dict, key) == false)
+                assert(dict.lookup(curr_dict, key) == nil)
+            end
+        end
+
+        if expected_key_values[rem_key] ~= nil then
+            assert(curr_dict ~= next_dict)
+
+            expected_key_values[rem_key] = nil
+            expected_size = expected_size - 1
+        else
+            assert(curr_dict == next_dict)
+        end
+
+        assert(dict.size(next_dict) == expected_size)
+        assert(dict.empty(next_dict) == (expected_size == 0))
+
+        for _, key in ipairs(POSSIBLE_KEYS_OR_VALUES) do
+            if expected_key_values[key] ~= nil then
+                assert(dict.contains(next_dict, key) == true)
+                assert(dict.lookup(next_dict, key) == expected_key_values[key])
+            else
+                assert(dict.contains(next_dict, key) == false)
+                assert(dict.lookup(next_dict, key) == nil)
+            end
+        end
+
+        curr_dict = next_dict
+    end
+end
+
+do
+    local curr_dict = dict.new()
+
+    local expected_key_values = {} ---@type table<any, any>
+    local expected_size = 0 ---@type integer
+
+    for _ = 1, ASSOC_COUNT + DISSOC_COUNT do
+        local r = math.random(1, 2)
+
+        if r == 1 then
             local new_key = random_key_or_value()
             local new_value = random_key_or_value()
 
-            local next_dict = curr_dict:assoc(new_key, new_value)
+            local next_dict = dict.assoc(curr_dict, new_key, new_value)
 
             for _, key in ipairs(POSSIBLE_KEYS_OR_VALUES) do
                 if expected_key_values[key] ~= nil then
-                    assert(curr_dict:contains(key) == true)
-                    assert(curr_dict:lookup(key) == expected_key_values[key])
+                    assert(dict.contains(curr_dict, key) == true)
+                    assert(dict.lookup(curr_dict, key) == expected_key_values[key])
                 else
-                    assert(curr_dict:contains(key) == false)
-                    assert(curr_dict:lookup(key) == nil)
+                    assert(dict.contains(curr_dict, key) == false)
+                    assert(dict.lookup(curr_dict, key) == nil)
                 end
             end
 
@@ -72,53 +185,31 @@ for _, mode in ipairs(immut.AVAILABLE_DICT_MODES) do
                 expected_size = expected_size + 1
             end
 
-            assert(next_dict:size() == expected_size)
+            assert(dict.size(next_dict) == expected_size)
 
             for _, key in ipairs(POSSIBLE_KEYS_OR_VALUES) do
                 if expected_key_values[key] ~= nil then
-                    assert(next_dict:contains(key) == true)
-                    assert(next_dict:lookup(key) == expected_key_values[key])
+                    assert(dict.contains(next_dict, key) == true)
+                    assert(dict.lookup(next_dict, key) == expected_key_values[key])
                 else
-                    assert(next_dict:contains(key) == false)
-                    assert(next_dict:lookup(key) == nil)
+                    assert(dict.contains(next_dict, key) == false)
+                    assert(dict.lookup(next_dict, key) == nil)
                 end
             end
 
             curr_dict = next_dict
-        end
-    end
-
-    do
-        local curr_dict = immut.dict(mode)
-
-        local expected_key_values = {} ---@type table<any, any>
-        local expected_size = 0 ---@type integer
-
-        for _ = 1, ASSOC_COUNT do
-            local new_key = random_key_or_value()
-            local new_value = random_key_or_value()
-
-            curr_dict = curr_dict:assoc(new_key, new_value)
-
-            if expected_key_values[new_key] == nil then
-                expected_size = expected_size + 1
-            end
-
-            expected_key_values[new_key] = new_value
-        end
-
-        for _ = 1, DISSOC_COUNT do
+        elseif r == 2 then
             local rem_key = random_key_or_value()
 
-            local next_dict = curr_dict:dissoc(rem_key)
+            local next_dict = dict.dissoc(curr_dict, rem_key)
 
             for _, key in ipairs(POSSIBLE_KEYS_OR_VALUES) do
                 if expected_key_values[key] ~= nil then
-                    assert(curr_dict:contains(key) == true)
-                    assert(curr_dict:lookup(key) == expected_key_values[key])
+                    assert(dict.contains(curr_dict, key) == true)
+                    assert(dict.lookup(curr_dict, key) == expected_key_values[key])
                 else
-                    assert(curr_dict:contains(key) == false)
-                    assert(curr_dict:lookup(key) == nil)
+                    assert(dict.contains(curr_dict, key) == false)
+                    assert(dict.lookup(curr_dict, key) == nil)
                 end
             end
 
@@ -131,113 +222,20 @@ for _, mode in ipairs(immut.AVAILABLE_DICT_MODES) do
                 assert(curr_dict == next_dict)
             end
 
-            assert(next_dict:size() == expected_size)
-            assert(next_dict:empty() == (expected_size == 0))
+            assert(dict.size(next_dict) == expected_size)
+            assert(dict.empty(next_dict) == (expected_size == 0))
 
             for _, key in ipairs(POSSIBLE_KEYS_OR_VALUES) do
                 if expected_key_values[key] ~= nil then
-                    assert(next_dict:contains(key) == true)
-                    assert(next_dict:lookup(key) == expected_key_values[key])
+                    assert(dict.contains(next_dict, key) == true)
+                    assert(dict.lookup(next_dict, key) == expected_key_values[key])
                 else
-                    assert(next_dict:contains(key) == false)
-                    assert(next_dict:lookup(key) == nil)
+                    assert(dict.contains(next_dict, key) == false)
+                    assert(dict.lookup(next_dict, key) == nil)
                 end
             end
 
             curr_dict = next_dict
-        end
-    end
-
-    do
-        local curr_dict = immut.dict(mode)
-
-        local expected_key_values = {} ---@type table<any, any>
-        local expected_size = 0 ---@type integer
-
-        for _ = 1, ASSOC_COUNT + DISSOC_COUNT do
-            local r = math.random(1, 2)
-
-            if r == 1 then
-                local new_key = random_key_or_value()
-                local new_value = random_key_or_value()
-
-                local next_dict = curr_dict:assoc(new_key, new_value)
-
-                for _, key in ipairs(POSSIBLE_KEYS_OR_VALUES) do
-                    if expected_key_values[key] ~= nil then
-                        assert(curr_dict:contains(key) == true)
-                        assert(curr_dict:lookup(key) == expected_key_values[key])
-                    else
-                        assert(curr_dict:contains(key) == false)
-                        assert(curr_dict:lookup(key) == nil)
-                    end
-                end
-
-                if expected_key_values[new_key] ~= nil then
-                    if expected_key_values[new_key] == new_value then
-                        assert(curr_dict == next_dict)
-                    else
-                        assert(curr_dict ~= next_dict)
-                        expected_key_values[new_key] = new_value
-                    end
-                else
-                    assert(curr_dict ~= next_dict)
-                    expected_key_values[new_key] = new_value
-                    expected_size = expected_size + 1
-                end
-
-                assert(next_dict:size() == expected_size)
-
-                for _, key in ipairs(POSSIBLE_KEYS_OR_VALUES) do
-                    if expected_key_values[key] ~= nil then
-                        assert(next_dict:contains(key) == true)
-                        assert(next_dict:lookup(key) == expected_key_values[key])
-                    else
-                        assert(next_dict:contains(key) == false)
-                        assert(next_dict:lookup(key) == nil)
-                    end
-                end
-
-                curr_dict = next_dict
-            elseif r == 2 then
-                local rem_key = random_key_or_value()
-
-                local next_dict = curr_dict:dissoc(rem_key)
-
-                for _, key in ipairs(POSSIBLE_KEYS_OR_VALUES) do
-                    if expected_key_values[key] ~= nil then
-                        assert(curr_dict:contains(key) == true)
-                        assert(curr_dict:lookup(key) == expected_key_values[key])
-                    else
-                        assert(curr_dict:contains(key) == false)
-                        assert(curr_dict:lookup(key) == nil)
-                    end
-                end
-
-                if expected_key_values[rem_key] ~= nil then
-                    assert(curr_dict ~= next_dict)
-
-                    expected_key_values[rem_key] = nil
-                    expected_size = expected_size - 1
-                else
-                    assert(curr_dict == next_dict)
-                end
-
-                assert(next_dict:size() == expected_size)
-                assert(next_dict:empty() == (expected_size == 0))
-
-                for _, key in ipairs(POSSIBLE_KEYS_OR_VALUES) do
-                    if expected_key_values[key] ~= nil then
-                        assert(next_dict:contains(key) == true)
-                        assert(next_dict:lookup(key) == expected_key_values[key])
-                    else
-                        assert(next_dict:contains(key) == false)
-                        assert(next_dict:lookup(key) == nil)
-                    end
-                end
-
-                curr_dict = next_dict
-            end
         end
     end
 end
