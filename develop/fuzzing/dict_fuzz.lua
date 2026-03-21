@@ -34,24 +34,6 @@ local function update_possible_keys_or_values()
     end
 end
 
----@param d immut.dict
----@param expected_size integer
----@param expected_key_values table<any, any>
-local function dict_looks_as_expected(d, expected_size, expected_key_values)
-    do
-        local seen, count = {}, 0
-        for _, k, v in dict.iter(d) do
-            assert(seen[k] == nil)
-            count = count + 1
-            seen[k] = v
-        end
-        assert(count == expected_size)
-        for k, v in pairs(expected_key_values) do
-            assert(seen[k] == v)
-        end
-    end
-end
-
 do
     update_possible_keys_or_values()
 
@@ -75,8 +57,6 @@ do
                 assert(dict.lookup(curr_dict, key) == nil)
             end
         end
-
-        dict_looks_as_expected(curr_dict, expected_size, expected_key_values)
 
         if expected_key_values[new_key] ~= nil then
             if expected_key_values[new_key] == new_value then
@@ -102,8 +82,6 @@ do
                 assert(dict.lookup(next_dict, key) == nil)
             end
         end
-
-        dict_looks_as_expected(next_dict, expected_size, expected_key_values)
 
         curr_dict = next_dict
     end
@@ -143,8 +121,6 @@ do
             end
         end
 
-        dict_looks_as_expected(curr_dict, expected_size, expected_key_values)
-
         if expected_key_values[rem_key] ~= nil then
             assert(curr_dict ~= next_dict)
 
@@ -166,8 +142,6 @@ do
                 assert(dict.lookup(next_dict, key) == nil)
             end
         end
-
-        dict_looks_as_expected(next_dict, expected_size, expected_key_values)
 
         curr_dict = next_dict
     end
@@ -198,8 +172,6 @@ do
                 end
             end
 
-            dict_looks_as_expected(curr_dict, expected_size, expected_key_values)
-
             if expected_key_values[new_key] ~= nil then
                 if expected_key_values[new_key] == new_value then
                     assert(curr_dict == next_dict)
@@ -225,8 +197,6 @@ do
                 end
             end
 
-            dict_looks_as_expected(next_dict, expected_size, expected_key_values)
-
             curr_dict = next_dict
         elseif r == 2 then
             local rem_key = random_key_or_value()
@@ -242,8 +212,6 @@ do
                     assert(dict.lookup(curr_dict, key) == nil)
                 end
             end
-
-            dict_looks_as_expected(curr_dict, expected_size, expected_key_values)
 
             if expected_key_values[rem_key] ~= nil then
                 assert(curr_dict ~= next_dict)
@@ -266,8 +234,6 @@ do
                     assert(dict.lookup(next_dict, key) == nil)
                 end
             end
-
-            dict_looks_as_expected(next_dict, expected_size, expected_key_values)
 
             curr_dict = next_dict
         end

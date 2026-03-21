@@ -71,8 +71,6 @@ list.snoc :: list, any -> list
 ```
 dict.new :: dict
 
-dict.iter :: dict -> iter, state, init
-
 dict.size :: dict -> integer
 dict.empty :: dict -> boolean
 

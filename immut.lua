@@ -727,64 +727,6 @@ local function __hamt_dissoc(node, level, key, hash)
     end
 end
 
----@return nil
-local function __hamt_noop()
-    return nil
-end
-
----@param st table
----@param sp integer
----@return integer? sp
----@return immut.hamt_key? key
----@return immut.hamt_value? value
----@nodiscard
-local function __hamt_iter(st, sp)
-    while sp > 0 do
-        local node, index = st[sp], st[sp + 1]
-
-        local node_type = node[1]
-
-        if node_type == __HAMT_LEAF then
-            local node_key = node[__HAMT_LEAF_NODE_KEY]
-            local node_value = node[__HAMT_LEAF_NODE_VALUE]
-
-            st[sp], st[sp + 1] = nil, nil
-            sp = sp - 2
-
-            return sp, node_key, node_value
-        elseif node_type == __HAMT_BITMAP then
-            local node_arity = node[__HAMT_BITMAP_NODE_ARITY]
-
-            if index <= node_arity then
-                local fst_child = __HAMT_BITMAP_NODE_CHILDREN
-                local idx_child = node[fst_child + index - 1]
-
-                st[sp + 1] = index + 1
-
-                sp = sp + 2
-                st[sp], st[sp + 1] = idx_child, 1
-            else
-                st[sp], st[sp + 1] = nil, nil
-                sp = sp - 2
-            end
-        elseif node_type == __HAMT_COLLISION then
-            local node_arity = node[__HAMT_COLLISION_NODE_ARITY]
-
-            if index <= node_arity then
-                local fst_entry = __HAMT_COLLISION_NODE_ENTRIES
-                local idx_entry = fst_entry + index * 2 - 2
-
-                st[sp + 1] = index + 1
-
-                return sp, node[idx_entry], node[idx_entry + 1]
-            else
-                st[sp], st[sp + 1] = nil, nil
-                sp = sp - 2
-            end
-        end
-    end
-end
-
 ---@param node? immut.hamt_node
 ---@param level integer
 ---@param key immut.hamt_key
@@ -1044,22 +986,6 @@ immut.dict = __immut_dict
 ---@nodiscard
 function __immut_dict.new()
     return __EMPTY_DICT
-end
-
----O(1). Returns an iterator function that allows iterating over the key-value pairs in the dict.
----@param dict immut.dict
----@return function iter
----@return table? state
----@return integer? init
----@nodiscard
-function __immut_dict.iter(dict)
-    local root = dict[__DICT_ROOT]
-
-    if root == nil then
-        return __hamt_noop
-    end
-
-    return __hamt_iter, { root, 1 }, 1
 end
 
 ---O(1). Returns the number of key-value pairs in the dict.
