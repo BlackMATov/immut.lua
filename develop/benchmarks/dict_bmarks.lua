@@ -20,32 +20,10 @@ print '----------------------------------------'
 
 for _, N in ipairs(NS) do
     basics.describe_bench(
-        string.format('Dict Benchmarks: Next %d random elements', N),
+        string.format('Dict Benchmarks: Iter %d random elements', N),
         function(m)
             local s = 0
-            for k, v in dict.next, m do
-                s = s + k + v
-            end
-            return s
-        end, function()
-            local m = dict.new()
-
-            for i = 1, N do
-                m = dict.assoc(m, i, i)
-            end
-
-            return m
-        end)
-end
-
-print '----------------------------------------'
-
-for _, N in ipairs(NS) do
-    basics.describe_bench(
-        string.format('Dict Benchmarks: Pairs %d random elements', N),
-        function(m)
-            local s = 0
-            for _, k, v in dict.pairs(m) do
+            for _, k, v in dict.iter(m) do
                 s = s + k + v
             end
             return s

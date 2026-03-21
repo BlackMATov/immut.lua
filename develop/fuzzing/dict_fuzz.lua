@@ -40,20 +40,7 @@ end
 local function dict_looks_as_expected(d, expected_size, expected_key_values)
     do
         local seen, count = {}, 0
-        for k, v in dict.next, d, nil do
-            assert(seen[k] == nil)
-            count = count + 1
-            seen[k] = v
-        end
-        assert(count == expected_size)
-        for k, v in pairs(expected_key_values) do
-            assert(seen[k] == v)
-        end
-    end
-
-    do
-        local seen, count = {}, 0
-        for _, k, v in dict.pairs(d) do
+        for _, k, v in dict.iter(d) do
             assert(seen[k] == nil)
             count = count + 1
             seen[k] = v
@@ -88,6 +75,8 @@ do
                 assert(dict.lookup(curr_dict, key) == nil)
             end
         end
+
+        dict_looks_as_expected(curr_dict, expected_size, expected_key_values)
 
         if expected_key_values[new_key] ~= nil then
             if expected_key_values[new_key] == new_value then
@@ -154,6 +143,8 @@ do
             end
         end
 
+        dict_looks_as_expected(curr_dict, expected_size, expected_key_values)
+
         if expected_key_values[rem_key] ~= nil then
             assert(curr_dict ~= next_dict)
 
@@ -207,6 +198,8 @@ do
                 end
             end
 
+            dict_looks_as_expected(curr_dict, expected_size, expected_key_values)
+
             if expected_key_values[new_key] ~= nil then
                 if expected_key_values[new_key] == new_value then
                     assert(curr_dict == next_dict)
@@ -249,6 +242,8 @@ do
                     assert(dict.lookup(curr_dict, key) == nil)
                 end
             end
+
+            dict_looks_as_expected(curr_dict, expected_size, expected_key_values)
 
             if expected_key_values[rem_key] ~= nil then
                 assert(curr_dict ~= next_dict)

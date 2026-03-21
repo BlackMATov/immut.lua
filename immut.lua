@@ -727,98 +727,6 @@ local function __hamt_dissoc(node, level, key, hash)
     end
 end
 
----@param node? immut.hamt_node
----@return immut.hamt_key? key
----@return immut.hamt_value? value
----@nodiscard
-local function __hamt_first(node)
-    while node ~= nil do
-        local node_type = node[1]
-
-        if node_type == __HAMT_LEAF then
-            return node[__HAMT_LEAF_NODE_KEY], node[__HAMT_LEAF_NODE_VALUE]
-        elseif node_type == __HAMT_BITMAP then
-            local fst_child = __HAMT_BITMAP_NODE_CHILDREN
-            node = node[fst_child]
-        elseif node_type == __HAMT_COLLISION then
-            local fst_entry = __HAMT_COLLISION_NODE_ENTRIES
-            return node[fst_entry], node[fst_entry + 1]
-        else
-            __lua_error(__lua_string_format(
-                'invalid hamt node type: %s',
-                __lua_tostring(node_type)))
-        end
-    end
-end
-
----@param node? immut.hamt_node
----@param level integer
----@param key immut.hamt_key
----@param hash immut.hamt_hash
----@return immut.hamt_key? key
----@return immut.hamt_value? value
----@nodiscard
-local function __hamt_next(node, level, key, hash)
-    local pc32 = __immut_popcount32
-
-    ---@type immut.hamt_node?
-    local nxt_node
-
-    while node ~= nil do
-        local node_type = node[1]
-
-        if node_type == __HAMT_LEAF then
-            local node_key = node[__HAMT_LEAF_NODE_KEY]
-            if node_key ~= key then __lua_error('invalid key to \'next\'') end
-            return __hamt_first(nxt_node)
-        elseif node_type == __HAMT_BITMAP then
-            local node_arity = node[__HAMT_BITMAP_NODE_ARITY]
-            local node_bitmap = node[__HAMT_BITMAP_NODE_BITMAP]
-
-            local hash_frag = __hamt_frag(hash, level)
-
-            if node_bitmap % (hash_frag + hash_frag) < hash_frag then
-                __lua_error('invalid key to \'next\'')
-            end
-
-            local fst_child = __HAMT_BITMAP_NODE_CHILDREN
-            local bit_child = pc32(node_bitmap % hash_frag) + fst_child
-
-            if bit_child < fst_child + node_arity - 1 then
-                nxt_node = node[bit_child + 1]
-            end
-
-            node, level = node[bit_child], level + 1
-        elseif node_type == __HAMT_COLLISION then
-            local node_hash = node[__HAMT_COLLISION_NODE_HASH]
-            if node_hash ~= hash then __lua_error('invalid key to \'next\'') end
-
-            local node_arity = node[__HAMT_COLLISION_NODE_ARITY]
-
-            local fst_entry = __HAMT_COLLISION_NODE_ENTRIES
-            local lst_entry = fst_entry + 2 * node_arity - 2
-
-            for i = fst_entry, lst_entry, 2 do
-                local entry_key = node[i]
-
-                if entry_key == key then
-                    if i == lst_entry then
-                        return __hamt_first(nxt_node)
-                    end
-
-                    return node[i + 2], node[i + 3]
-                end
-            end
-
-            __lua_error('invalid key to \'next\'')
-        else
-            __lua_error(__lua_string_format(
-                'invalid hamt node type: %s',
-                __lua_tostring(node_type)))
-        end
-    end
-end
-
 ---@return nil
 local function __hamt_noop()
     return nil
@@ -830,7 +738,7 @@ end
 ---@return immut.hamt_key? key
 ---@return immut.hamt_value? value
 ---@nodiscard
-local function __hamt_pair(st, sp)
+local function __hamt_iter(st, sp)
     while sp > 0 do
         local node, index = st[sp], st[sp + 1]
 
@@ -1138,6 +1046,22 @@ function __immut_dict.new()
     return __EMPTY_DICT
 end
 
+---O(1). Returns an iterator function that allows iterating over the key-value pairs in the dict.
+---@param dict immut.dict
+---@return function iter
+---@return table? state
+---@return integer? init
+---@nodiscard
+function __immut_dict.iter(dict)
+    local root = dict[__DICT_ROOT]
+
+    if root == nil then
+        return __hamt_noop
+    end
+
+    return __hamt_iter, { root, 1 }, 1
+end
+
 ---O(1). Returns the number of key-value pairs in the dict.
 ---@param dict immut.dict
 ---@return integer
@@ -1205,44 +1129,6 @@ function __immut_dict.dissoc(dict, key)
     end
 
     return { dict[__DICT_SIZE] + size_delta, new_root }
-end
-
----O(log32 n). Lua `next`-style iterator for traversing all key-value pairs in the dict.
----Order of traversal is not guaranteed, but it will be consistent for a given dict instance.
----@param dict immut.dict
----@param key? any
----@return any? key
----@return any? value
----@nodiscard
-function __immut_dict.next(dict, key)
-    local root = dict[__DICT_ROOT]
-
-    if key == nil then
-        return __hamt_first(root)
-    end
-
-    if root == nil then
-        __lua_error('invalid key to \'next\'')
-    end
-
-    return __hamt_next(root, 1, key, __hamt_hash(key))
-end
-
----O(1). Lua `pairs`-style iterator for traversing all key-value pairs in the dict.
----Order of traversal is not guaranteed, but it will be consistent for a given dict instance.
----@param dict immut.dict
----@return function iter
----@return table? state
----@return integer? init
----@nodiscard
-function __immut_dict.pairs(dict)
-    local root = dict[__DICT_ROOT]
-
-    if root == nil then
-        return __hamt_noop
-    end
-
-    return __hamt_pair, { root, 1 }, 1
 end
 
 ---O(log32 n). Retrieves the value associated with a given key in the dict.
