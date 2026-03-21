@@ -77,6 +77,8 @@ dict.empty :: dict -> boolean
 dict.assoc :: dict, any, any -> dict
 dict.dissoc :: dict, any -> dict
 
+dict.next :: dict, any? -> any?, any?
+
 dict.lookup :: dict, any -> any
 dict.contains :: dict, any -> boolean
 ```
