@@ -1,4 +1,5 @@
 local list = require 'immut'.list
+local basics = require 'develop.basics'
 
 do
     local l0 = list.new()
@@ -165,27 +166,10 @@ do
 end
 
 do
-    local l = list.new()
-
-    l = list.cons(l, nil)
-    assert(list.size(l) == 1 and not list.empty(l))
-    assert(list.head(l) == nil and list.last(l) == nil)
-    assert(list.empty(list.tail(l)) and list.size(list.tail(l)) == 0)
-    assert(list.empty(list.init(l)) and list.size(list.init(l)) == 0)
-
-    l = list.snoc(l, nil)
-    assert(list.size(l) == 2 and not list.empty(l))
-    assert(list.head(l) == nil and list.last(l) == nil)
-    assert(list.empty(list.tail(l)) == false and list.size(list.tail(l)) == 1)
-    assert(list.head(list.tail(l)) == nil and list.last(list.tail(l)) == nil)
-    assert(list.empty(list.init(l)) == false and list.size(list.init(l)) == 1)
-    assert(list.head(list.init(l)) == nil and list.last(list.init(l)) == nil)
-
-    l = list.cons(l, 42)
-    assert(list.size(l) == 3 and not list.empty(l))
-    assert(list.head(l) == 42 and list.last(l) == nil)
-    assert(list.empty(list.tail(l)) == false and list.size(list.tail(l)) == 2)
-    assert(list.head(list.tail(l)) == nil and list.last(list.tail(l)) == nil)
-    assert(list.empty(list.init(l)) == false and list.size(list.init(l)) == 2)
-    assert(list.head(list.init(l)) == 42 and list.last(list.init(l)) == nil)
+    basics.describe_error(function() _ = list.head(list.new()) end)
+    basics.describe_error(function() _ = list.last(list.new()) end)
+    basics.describe_error(function() _ = list.tail(list.new()) end)
+    basics.describe_error(function() _ = list.init(list.new()) end)
+    basics.describe_error(function() _ = list.cons(list.new(), nil) end)
+    basics.describe_error(function() _ = list.snoc(list.new(), nil) end)
 end

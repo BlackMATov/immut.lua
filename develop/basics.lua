@@ -169,4 +169,17 @@ function basics.describe_bench(name, loop, init, fini)
     collectgarbage('collect')
 end
 
+---@param func fun(...)
+---@param ... any
+function basics.describe_error(func, ...)
+    if pcall(func, ...) then
+        error('expected error, but got success', 2)
+    end
+end
+
+if os.getenv('LOCAL_LUA_DEBUGGER_VSCODE') == '1' then
+    -- no-op in debug mode
+    function basics.describe_error() end
+end
+
 return basics
