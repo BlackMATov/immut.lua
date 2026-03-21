@@ -451,7 +451,7 @@ end
 ---@return integer size_delta
 ---@nodiscard
 local function __hamt_assoc(node, level, key, hash, value)
-    if node == nil then
+    if not node then
         return { __HAMT_LEAF, key, hash, value }, 1
     end
 
@@ -594,7 +594,7 @@ end
 ---@return integer size_delta
 ---@nodiscard
 local function __hamt_dissoc(node, level, key, hash)
-    if node == nil then
+    if not node then
         return nil, 0
     end
 
@@ -736,7 +736,7 @@ end
 local function __hamt_lookup(node, level, key, hash)
     local pc32 = __immut_popcount32
 
-    while node ~= nil do
+    while node do
         local node_type = node[1]
 
         if node_type == __HAMT_LEAF then
@@ -1046,7 +1046,7 @@ function __immut_dict.dissoc(dict, key)
 
     local new_root, size_delta = __hamt_dissoc(root, 1, key, hash)
 
-    if new_root == nil then
+    if not new_root then
         return __EMPTY_DICT
     end
 
