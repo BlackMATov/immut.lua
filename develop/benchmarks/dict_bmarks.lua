@@ -24,7 +24,7 @@ for _, N in ipairs(NS) do
         function(m, vs)
             for i = 1, N do
                 local k = vs[i]
-                _ = dict.next(m, k)
+                local nk = dict.next(m, k) ---@diagnostic disable-line: unused-local
             end
         end, function()
             local m, vs = dict.new(), {}
@@ -47,7 +47,7 @@ for _, N in ipairs(NS) do
         function(m, vs)
             for i = 1, N do
                 local k = vs[i]
-                _ = dict.lookup(m, k)
+                local v = dict.lookup(m, k) ---@diagnostic disable-line: unused-local
             end
         end, function()
             local m, vs = dict.new(), {}
