@@ -1,4 +1,5 @@
 local list = require 'immut'.list
+local basics = require 'develop.basics'
 
 do
     local l0 = list.new()
@@ -162,4 +163,13 @@ do
     local l3 = list.snoc(l2, 3)
     assert(list.size(l3) == 3 and not list.empty(l3))
     assert(list.head(l3) == 1 and list.last(l3) == 3)
+end
+
+do
+    basics.describe_error(function() _ = list.head(list.new()) end)
+    basics.describe_error(function() _ = list.last(list.new()) end)
+    basics.describe_error(function() _ = list.tail(list.new()) end)
+    basics.describe_error(function() _ = list.init(list.new()) end)
+    basics.describe_error(function() _ = list.cons(list.new(), nil) end)
+    basics.describe_error(function() _ = list.snoc(list.new(), nil) end)
 end

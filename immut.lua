@@ -442,7 +442,7 @@ local function __hamt_collision_node(hash, arity)
     return node
 end
 
----@param node immut.hamt_node
+---@param node? immut.hamt_node
 ---@param level integer
 ---@param key immut.hamt_key
 ---@param hash immut.hamt_hash
@@ -586,7 +586,7 @@ local function __hamt_assoc(node, level, key, hash, value)
     end
 end
 
----@param node immut.hamt_node
+---@param node? immut.hamt_node
 ---@param level integer
 ---@param key immut.hamt_key
 ---@param hash immut.hamt_hash
@@ -1047,6 +1047,10 @@ function __immut_dict.dissoc(dict, key)
     local root, hash = dict[__DICT_ROOT], __hamt_hash(key)
 
     local new_root, size_delta = __hamt_dissoc(root, 1, key, hash)
+
+    if new_root == nil then
+        return __EMPTY_DICT
+    end
 
     if new_root == root then
         return dict

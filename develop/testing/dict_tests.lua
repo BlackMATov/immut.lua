@@ -1,4 +1,5 @@
 local dict = require 'immut'.dict
+local basics = require 'develop.basics'
 
 do
     local m0 = dict.new()
@@ -113,4 +114,24 @@ do
         assert(dict.contains(m2_without_42, 'hello') == true)
         assert(dict.lookup(m2_without_42, 'hello') == 'world')
     end
+end
+
+do
+    local m = dict.new()
+    assert(dict.dissoc(m, 'hello') == m)
+
+    m = dict.assoc(m, 'hello', 'world')
+    assert(dict.assoc(m, 'hello', 'world') == m)
+
+    assert(dict.dissoc(m, 'world') == m)
+    assert(dict.dissoc(m, 'hello') == dict.new())
+end
+
+do
+    basics.describe_error(function() _ = dict.assoc(dict.new(), nil, 42) end)
+    basics.describe_error(function() _ = dict.assoc(dict.new(), 42, nil) end)
+    basics.describe_error(function() _ = dict.assoc(dict.new(), nil, nil) end)
+    basics.describe_error(function() _ = dict.assoc(dict.new(), {}, 42) end)
+
+    basics.describe_error(function() _ = dict.dissoc(dict.new(), nil) end)
 end
