@@ -21,21 +21,42 @@ print '----------------------------------------'
 for _, N in ipairs(NS) do
     basics.describe_bench(
         string.format('Dict Benchmarks: Next %d random elements', N),
-        function(m, vs)
-            for i = 1, N do
-                local k = vs[i]
-                local nk = dict.next(m, k) ---@diagnostic disable-line: unused-local
+        function(m)
+            local s = 0
+            for k, v in dict.next, m do
+                s = s + k + v
             end
+            return s
         end, function()
-            local m, vs = dict.new(), {}
+            local m = dict.new()
 
             for i = 1, N do
-                local k = math.random(1, N)
-                m = dict.assoc(m, k, k)
-                vs[i] = k
+                m = dict.assoc(m, i, i)
             end
 
-            return m, vs
+            return m
+        end)
+end
+
+print '----------------------------------------'
+
+for _, N in ipairs(NS) do
+    basics.describe_bench(
+        string.format('Dict Benchmarks: Pairs %d random elements', N),
+        function(m)
+            local s = 0
+            for _, k, v in dict.pairs(m) do
+                s = s + k + v
+            end
+            return s
+        end, function()
+            local m = dict.new()
+
+            for i = 1, N do
+                m = dict.assoc(m, i, i)
+            end
+
+            return m
         end)
 end
 

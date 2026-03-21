@@ -78,6 +78,7 @@ dict.assoc :: dict, any, any -> dict
 dict.dissoc :: dict, any -> dict
 
 dict.next :: dict, any? -> any?, any?
+dict.pairs :: dict -> iter, state, init
 
 dict.lookup :: dict, any -> any
 dict.contains :: dict, any -> boolean

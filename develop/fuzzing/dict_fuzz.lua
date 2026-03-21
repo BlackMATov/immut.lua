@@ -38,15 +38,30 @@ end
 ---@param expected_size integer
 ---@param expected_key_values table<any, any>
 local function dict_looks_as_expected(d, expected_size, expected_key_values)
-    local seen, count = {}, 0
-    for k, v in dict.next, d, nil do
-        assert(seen[k] == nil)
-        count = count + 1
-        seen[k] = v
+    do
+        local seen, count = {}, 0
+        for k, v in dict.next, d, nil do
+            assert(seen[k] == nil)
+            count = count + 1
+            seen[k] = v
+        end
+        assert(count == expected_size)
+        for k, v in pairs(expected_key_values) do
+            assert(seen[k] == v)
+        end
     end
-    assert(count == expected_size)
-    for k, v in pairs(expected_key_values) do
-        assert(seen[k] == v)
+
+    do
+        local seen, count = {}, 0
+        for _, k, v in dict.pairs(d) do
+            assert(seen[k] == nil)
+            count = count + 1
+            seen[k] = v
+        end
+        assert(count == expected_size)
+        for k, v in pairs(expected_key_values) do
+            assert(seen[k] == v)
+        end
     end
 end
 
