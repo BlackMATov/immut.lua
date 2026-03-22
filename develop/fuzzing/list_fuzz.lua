@@ -45,7 +45,7 @@ do
         local new_elem = random_key_or_value()
 
         if math.random(1, 2) == 1 then
-            local next_list = list.cons(curr_list, new_elem)
+            local next_list = list.cons(new_elem, curr_list)
 
             do
                 local i = expected_head_index

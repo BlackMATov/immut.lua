@@ -9,7 +9,7 @@ do
         assert(list.empty(l0) == true)
     end
 
-    local l1 = list.cons(l0, 42)
+    local l1 = list.cons(42, l0)
 
     do
         assert(list.size(l0) == 0)
@@ -27,7 +27,7 @@ do
         assert(list.empty(list.init(l1)) == true)
     end
 
-    local l2 = list.cons(l1, 21)
+    local l2 = list.cons(21, l1)
 
     do
         assert(list.size(l0) == 0)
@@ -118,7 +118,7 @@ do
 end
 
 do
-    local l = list.cons(list.cons(list.cons(list.new(), 1), 2), 3)
+    local l = list.cons(3, list.cons(2, list.cons(1, list.new())))
     assert(list.size(l) == 3 and not list.empty(l))
 
     do
@@ -166,10 +166,34 @@ do
 end
 
 do
+    do
+        local l1 = list.cons(42, list.new())
+
+        local h, t = list.uncons(l1)
+        assert(h == 42 and list.empty(t))
+
+        local i, l = list.unsnoc(l1)
+        assert(list.empty(i) and l == 42)
+    end
+
+    do
+        local l2 = list.cons(21, list.cons(42, list.new()))
+
+        local h, t = list.uncons(l2)
+        assert(h == 21 and list.head(t) == 42 and list.last(t) == 42)
+
+        local i, l = list.unsnoc(l2)
+        assert(list.head(i) == 21 and list.last(i) == 21 and l == 42)
+    end
+end
+
+do
     basics.describe_error(function() _ = list.head(list.new()) end)
     basics.describe_error(function() _ = list.last(list.new()) end)
     basics.describe_error(function() _ = list.tail(list.new()) end)
     basics.describe_error(function() _ = list.init(list.new()) end)
-    basics.describe_error(function() _ = list.cons(list.new(), nil) end)
+    basics.describe_error(function() _ = list.cons(nil, list.new()) end)
     basics.describe_error(function() _ = list.snoc(list.new(), nil) end)
+    basics.describe_error(function() _ = list.uncons(list.new()) end)
+    basics.describe_error(function() _ = list.unsnoc(list.new()) end)
 end

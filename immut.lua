@@ -870,7 +870,7 @@ function __immut_list.last(list)
     return last
 end
 
----O(1). Retrieves a new list containing all elements of the original list except the first one.
+---O(1). Retrieves the tail of the list, which contains all elements of the original list except the first one.
 ---If the list is empty, it throws an error.
 ---@param list immut.list
 ---@return immut.list
@@ -885,7 +885,7 @@ function __immut_list.tail(list)
     return tail
 end
 
----O(n). Retrieves a new list containing all elements of the original list except the last one.
+---O(n). Returns a new list containing all elements of the original list except the last one.
 ---If the list is empty, it throws an error.
 ---@param list immut.list
 ---@return immut.list
@@ -916,11 +916,11 @@ function __immut_list.init(list)
 end
 
 ---O(1). Returns a new list with a given element added to the front of the list.
----@param list immut.list
 ---@param head any
+---@param list immut.list
 ---@return immut.list
 ---@nodiscard
-function __immut_list.cons(list, head)
+function __immut_list.cons(head, list)
     if head == nil then
         __lua_error('list does not support nil elements')
     end
@@ -960,6 +960,52 @@ function __immut_list.snoc(list, last)
     end
 
     return snoc
+end
+
+---O(1). Decomposes the list into its head and tail.
+---If the list is empty, it throws an error.
+---@param list immut.list
+---@return any head
+---@return immut.list tail
+function __immut_list.uncons(list)
+    local tail = list[__LIST_TAIL]
+
+    if not tail then
+        __lua_error('attempt to uncons empty list')
+    end
+
+    return list[__LIST_HEAD], tail
+end
+
+---O(n). Decomposes the list into its init and last element.
+---If the list is empty, it throws an error.
+---@param list immut.list
+---@return immut.list init
+---@return any last
+---@nodiscard
+function __immut_list.unsnoc(list)
+    local tail = list[__LIST_TAIL]
+
+    if not tail then
+        __lua_error('attempt to unsnoc empty list')
+    end
+
+    local curr = tail
+    local head_list, head_count = { list[__LIST_HEAD] }, 1
+
+    while curr[__LIST_TAIL] do
+        head_count = head_count + 1
+        head_list[head_count] = curr[__LIST_HEAD]
+        curr = curr[__LIST_TAIL]
+    end
+
+    local init = __EMPTY_LIST
+
+    for i = head_count - 1, 1, -1 do
+        init = { head_list[i], init }
+    end
+
+    return init, head_list[head_count]
 end
 
 ---

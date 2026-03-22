@@ -11,7 +11,7 @@ for _, N in ipairs(NS) do
 
             for _ = 1, N do
                 local v = math.random(1, N)
-                l = list.cons(l, v)
+                l = list.cons(v, l)
             end
         end)
 end
@@ -44,7 +44,7 @@ for _, N in ipairs(NS) do
             local l = list.new()
 
             for _ = 1, N do
-                l = list.cons(l, math.random(1, N))
+                l = list.cons(math.random(1, N), l)
             end
 
             return l
@@ -64,7 +64,7 @@ for _, N in ipairs(NS) do
             local l = list.new()
 
             for _ = 1, N do
-                l = list.cons(l, math.random(1, N))
+                l = list.cons(math.random(1, N), l)
             end
 
             return l

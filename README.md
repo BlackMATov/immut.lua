@@ -62,8 +62,11 @@ list.last :: list -> any
 list.tail :: list -> list?
 list.init :: list -> list?
 
-list.cons :: list, any -> list
+list.cons :: any, list -> list
 list.snoc :: list, any -> list
+
+list.uncons :: list -> any, list
+list.unsnoc :: list -> list, any
 ```
 
 ### Dict
