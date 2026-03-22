@@ -53,6 +53,12 @@ luarocks install immut.lua
 ```
 list.new :: list
 
+list.from_vargs :: any... -> list
+list.to_vargs :: list -> any...
+
+list.from_table :: any[], integer?, integer? -> list
+list.to_table :: list, integer?, table? -> any[], integer
+
 list.size :: list -> integer
 list.empty :: list -> boolean
 

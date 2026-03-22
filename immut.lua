@@ -32,6 +32,7 @@ local __lua_string_byte = string.byte
 local __lua_string_format = string.format
 local __lua_tostring = tostring
 local __lua_type = type
+local __lua_unpack = unpack or table.unpack ---@diagnostic disable-line: deprecated, undefined-field
 
 ---
 ---
@@ -803,11 +804,79 @@ local __EMPTY_LIST = { nil, nil }
 local __immut_list = {}
 immut.list = __immut_list
 
----Returns an empty list.
+---O(1). Returns an empty list.
 ---@return immut.list
 ---@nodiscard
 function __immut_list.new()
     return __EMPTY_LIST
+end
+
+---O(n). Returns a new list containing the elements of the given multiple arguments in the same order.
+---@param ... any
+---@return immut.list
+---@nodiscard
+function __immut_list.from_vargs(...)
+    return __immut_list.from_table({ ... })
+end
+
+---O(n). Returns the elements of the list as multiple return values in the same order.
+---@param list immut.list
+---@return ... any
+---@nodiscard
+function __immut_list.to_vargs(list)
+    local t, s = __immut_list.to_table(list)
+    return __lua_unpack(t, 1, s)
+end
+
+---O(n). Returns a new list containing the elements of the given table in the same order.
+---The optional `f` and `e` parameters specify the range of indices in the table to be included in the list (inclusive).
+---If `f` is not provided, it defaults to 1.
+---If `e` is not provided, it defaults to #t.
+---@param t any[]
+---@param f? integer
+---@param e? integer
+---@return immut.list
+---@nodiscard
+function __immut_list.from_table(t, f, e)
+    f, e = f or 1, e or #t
+
+    local list = __EMPTY_LIST
+
+    for i = e, f, -1 do
+        local head = t[i]
+
+        if head == nil then
+            __lua_error('list does not support nil elements')
+        end
+
+        list = { head, list }
+    end
+
+    return list
+end
+
+---O(n). Returns a new table containing the elements of the given list in the same order.
+---If the optional `i` parameter is provided, the elements are inserted into the table starting from index `i`.
+---If the optional `t` parameter is provided, the elements are inserted into that table instead of a new one.
+---If `i` is not provided, it defaults to 1.
+---If `t` is not provided, a new table is created.
+---@param list immut.list
+---@param i? integer
+---@param t? any[]
+---@return any[]
+---@return integer
+function __immut_list.to_table(list, i, t)
+    i, t = i or 1, t or {}
+
+    local curr, size = list, 0
+
+    while curr[__LIST_TAIL] do
+        size = size + 1
+        t[i + size - 1] = curr[__LIST_HEAD]
+        curr = curr[__LIST_TAIL]
+    end
+
+    return t, size
 end
 
 ---O(n). Returns the number of elements in the list.
@@ -1027,7 +1096,7 @@ local __EMPTY_DICT = { 0, nil }
 local __immut_dict = {}
 immut.dict = __immut_dict
 
----Returns an empty dict.
+---O(1). Returns an empty dict.
 ---@return immut.dict
 ---@nodiscard
 function __immut_dict.new()

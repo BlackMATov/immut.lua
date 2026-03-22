@@ -188,6 +188,83 @@ do
 end
 
 do
+    do
+        local l0 = list.from_table({})
+        assert(list.size(l0) == 0 and list.empty(l0))
+
+        local t0 = list.to_table(l0)
+        assert(#t0 == 0)
+    end
+
+    do
+        local l1 = list.from_table({ 42 })
+        assert(list.size(l1) == 1 and not list.empty(l1))
+        assert(list.head(l1) == 42 and list.last(l1) == 42)
+
+        local t1 = list.to_table(l1)
+        assert(#t1 == 1 and t1[1] == 42)
+    end
+
+    do
+        local l2 = list.from_table({ 21, 42 })
+        assert(list.size(l2) == 2 and not list.empty(l2))
+        assert(list.head(l2) == 21 and list.last(l2) == 42)
+
+        local t2 = list.to_table(l2)
+        assert(#t2 == 2 and t2[1] == 21 and t2[2] == 42)
+    end
+
+    do
+        local l2 = list.from_table({ 1, 2, nil, 3 }, 1, 2)
+        assert(list.size(l2) == 2 and not list.empty(l2))
+        assert(list.head(l2) == 1 and list.last(l2) == 2)
+    end
+
+    do
+        local l2 = list.from_table({ 1, 2, 3, nil, 5 }, 2, 3)
+        assert(list.size(l2) == 2 and not list.empty(l2))
+        assert(list.head(l2) == 2 and list.last(l2) == 3)
+
+        local l3 = list.from_table({ 1, 2, 3, nil, 5 }, 1, 3)
+        assert(list.size(l3) == 3 and not list.empty(l3))
+        assert(list.head(l3) == 1 and list.last(l3) == 3)
+    end
+
+    do
+        local l = list.from_table({ 1, 2, 3 })
+
+        local t1 = list.to_table(l)
+        assert(t1[1] == 1 and t1[2] == 2 and t1[3] == 3)
+
+        local t2 = list.to_table(l, 2)
+        assert(t2[1] == nil and t2[2] == 1 and t2[3] == 2 and t2[4] == 3)
+
+        local t3 = {}
+        list.to_table(l, 2, t3)
+        assert(t3[1] == nil and t3[2] == 1 and t3[3] == 2 and t3[4] == 3)
+    end
+end
+
+do
+    do
+        local l0 = list.from_vargs()
+        assert(list.size(l0) == 0 and list.empty(l0))
+
+        local e1 = list.to_vargs(l0)
+        assert(e1 == nil)
+    end
+
+    do
+        local l3 = list.from_vargs(1, 2, 3)
+        assert(list.size(l3) == 3 and not list.empty(l3))
+        assert(list.head(l3) == 1 and list.last(l3) == 3)
+
+        local e1, e2, e3, e4 = list.to_vargs(l3)
+        assert(e1 == 1 and e2 == 2 and e3 == 3 and e4 == nil)
+    end
+end
+
+do
     basics.describe_error(function() _ = list.head(list.new()) end)
     basics.describe_error(function() _ = list.last(list.new()) end)
     basics.describe_error(function() _ = list.tail(list.new()) end)
