@@ -786,184 +786,6 @@ end
 
 ---
 ---
---- LIST IMPLEMENTATION
----
----
-
----@class immut.list
----@field package [1] any head
----@field package [2] immut.list? tail
-
-local __LIST_HEAD = 1
-local __LIST_TAIL = 2
-
----@type immut.list
-local __EMPTY_LIST = { nil, nil }
-
-local __immut_list = {}
-immut.list = __immut_list
-
----Returns an empty list.
----@return immut.list
----@nodiscard
-function __immut_list.new()
-    return __EMPTY_LIST
-end
-
----O(n). Returns the number of elements in the list.
----@param list immut.list
----@return integer
----@nodiscard
-function __immut_list.size(list)
-    local curr, size = list, 0
-
-    while curr[__LIST_TAIL] do
-        size = size + 1
-        curr = curr[__LIST_TAIL]
-    end
-
-    return size
-end
-
----O(1). Returns `true` if the list contains no elements, `false` otherwise.
----@param list immut.list
----@return boolean
----@nodiscard
-function __immut_list.empty(list)
-    return not list[__LIST_TAIL]
-end
-
----O(1). Retrieves the first element of the list.
----If the list is empty, it throws an error.
----@param list immut.list
----@return any
----@nodiscard
-function __immut_list.head(list)
-    local tail = list[__LIST_TAIL]
-
-    if not tail then
-        __lua_error('attempt to get head of empty list')
-    end
-
-    return list[__LIST_HEAD]
-end
-
----O(n). Retrieves the last element of the list.
----If the list is empty, it throws an error.
----@param list immut.list
----@return any
----@nodiscard
-function __immut_list.last(list)
-    local tail = list[__LIST_TAIL]
-
-    if not tail then
-        __lua_error('attempt to get last of empty list')
-    end
-
-    local curr, last = tail, list[__LIST_HEAD]
-
-    while curr[__LIST_TAIL] do
-        last = curr[__LIST_HEAD]
-        curr = curr[__LIST_TAIL]
-    end
-
-    return last
-end
-
----O(1). Retrieves a new list containing all elements of the original list except the first one.
----If the list is empty, it throws an error.
----@param list immut.list
----@return immut.list
----@nodiscard
-function __immut_list.tail(list)
-    local tail = list[__LIST_TAIL]
-
-    if not tail then
-        __lua_error('attempt to get tail of empty list')
-    end
-
-    return tail
-end
-
----O(n). Retrieves a new list containing all elements of the original list except the last one.
----If the list is empty, it throws an error.
----@param list immut.list
----@return immut.list
----@nodiscard
-function __immut_list.init(list)
-    local tail = list[__LIST_TAIL]
-
-    if not tail then
-        __lua_error('attempt to get init of empty list')
-    end
-
-    local curr = tail
-    local head_list, head_count = { list[__LIST_HEAD] }, 1
-
-    while curr[__LIST_TAIL] do
-        head_count = head_count + 1
-        head_list[head_count] = curr[__LIST_HEAD]
-        curr = curr[__LIST_TAIL]
-    end
-
-    local init = __EMPTY_LIST
-
-    for i = head_count - 1, 1, -1 do
-        init = { head_list[i], init }
-    end
-
-    return init
-end
-
----O(1). Returns a new list with a given element added to the front of the list.
----@param list immut.list
----@param head any
----@return immut.list
----@nodiscard
-function __immut_list.cons(list, head)
-    if head == nil then
-        __lua_error('list does not support nil elements')
-    end
-
-    return { head, list }
-end
-
----O(n). Returns a new list with a given element added to the end of the list.
----@param list immut.list
----@param last any
----@return immut.list
----@nodiscard
-function __immut_list.snoc(list, last)
-    if last == nil then
-        __lua_error('list does not support nil elements')
-    end
-
-    local tail = list[__LIST_TAIL]
-
-    if not tail then
-        return { last, __EMPTY_LIST }
-    end
-
-    local curr = tail
-    local head_list, head_count = { list[__LIST_HEAD] }, 1
-
-    while curr[__LIST_TAIL] do
-        head_count = head_count + 1
-        head_list[head_count] = curr[__LIST_HEAD]
-        curr = curr[__LIST_TAIL]
-    end
-
-    local snoc = { last, __EMPTY_LIST }
-
-    for i = head_count, 1, -1 do
-        snoc = { head_list[i], snoc }
-    end
-
-    return snoc
-end
-
----
----
 --- DICT IMPLEMENTATION
 ---
 ---
@@ -988,7 +810,7 @@ function __immut_dict.new()
     return __EMPTY_DICT
 end
 
----O(1). Returns the number of key-value pairs in the dict.
+---Returns the number of key-value pairs in the dict.
 ---@param dict immut.dict
 ---@return integer
 ---@nodiscard
@@ -996,7 +818,7 @@ function __immut_dict.size(dict)
     return dict[__DICT_SIZE]
 end
 
----O(1). Returns `true` if the dict contains no key-value pairs, `false` otherwise.
+---Returns `true` if the dict contains no key-value pairs, `false` otherwise.
 ---@param dict immut.dict
 ---@return boolean
 ---@nodiscard
@@ -1004,7 +826,7 @@ function __immut_dict.empty(dict)
     return dict[__DICT_SIZE] == 0
 end
 
----O(log32 n). Associates a given key with a value in the dict, returning a new dict instance with the updated key-value pair.
+---Associates a given key with a value in the dict, returning a new dict instance with the updated key-value pair.
 ---If the key already exists, its value is replaced with the new value.
 ---@param dict immut.dict
 ---@param key any
@@ -1031,7 +853,7 @@ function __immut_dict.assoc(dict, key, value)
     return { dict[__DICT_SIZE] + size_delta, new_root }
 end
 
----O(log32 n). Dissociates a given key from the dict, returning a new dict instance without the specified key.
+---Dissociates a given key from the dict, returning a new dict instance without the specified key.
 ---If the key does not exist, the original dict is returned unchanged.
 ---@param dict immut.dict
 ---@param key any
@@ -1057,7 +879,7 @@ function __immut_dict.dissoc(dict, key)
     return { dict[__DICT_SIZE] + size_delta, new_root }
 end
 
----O(log32 n). Retrieves the value associated with a given key in the dict.
+---Retrieves the value associated with a given key in the dict.
 ---If the key does not exist, it returns `nil`.
 ---@param dict immut.dict
 ---@param key any
@@ -1071,7 +893,7 @@ function __immut_dict.lookup(dict, key)
     return __hamt_lookup(dict[__DICT_ROOT], 1, key, __hamt_hash(key))
 end
 
----O(log32 n). Checks if a given key exists in the dict, returning `true` if it does and `false` otherwise.
+---Checks if a given key exists in the dict, returning `true` if it does and `false` otherwise.
 ---@param dict immut.dict
 ---@param key any
 ---@return boolean
@@ -1082,6 +904,86 @@ function __immut_dict.contains(dict, key)
     end
 
     return __hamt_lookup(dict[__DICT_ROOT], 1, key, __hamt_hash(key)) ~= nil
+end
+
+---
+---
+--- LIST IMPLEMENTATION
+---
+---
+
+---@class immut.list
+---@field package [1] integer size
+
+local __LIST_SIZE = 1
+
+---@type immut.list
+local __EMPTY_LIST = { 0 }
+
+local __immut_list = {}
+immut.list = __immut_list
+
+---Returns an empty list.
+---@return immut.list
+---@nodiscard
+function __immut_list.new()
+    return __EMPTY_LIST
+end
+
+---Returns the number of elements in the list.
+---@param list immut.list
+---@return integer
+---@nodiscard
+function __immut_list.size(list)
+    return list[__LIST_SIZE]
+end
+
+---Returns `true` if the list contains no elements, `false` otherwise.
+---@param list immut.list
+---@return boolean
+---@nodiscard
+function __immut_list.empty(list)
+    return list[__LIST_SIZE] == 0
+end
+
+---
+---
+--- STACK IMPLEMENTATION
+---
+---
+
+---@class immut.stack
+---@field package [1] integer size
+
+local __STACK_SIZE = 1
+
+---@type immut.stack
+local __EMPTY_STACK = { 0 }
+
+local __immut_stack = {}
+immut.stack = __immut_stack
+
+---Returns an empty stack.
+---@return immut.stack
+---@nodiscard
+function __immut_stack.new()
+    return __EMPTY_STACK
+end
+
+---Returns the number of elements in the stack.
+---@param stack immut.stack
+---@return integer
+---@nodiscard
+function __immut_stack.size(stack)
+    return stack[__STACK_SIZE]
+end
+
+---Returns `true` if the stack contains no elements, `false` otherwise.
+---@param stack immut.stack
+---@return boolean
+---@nodiscard
+function __immut_stack.empty(stack)
+    return stack[__STACK_SIZE] == 0
 end
 
 ---
